@@ -31,8 +31,10 @@ import org.apache.stratos.cloud.controller.exception.InvalidPartitionException;
 import org.apache.stratos.cloud.controller.iaases.Iaas;
 import org.apache.stratos.cloud.controller.iaases.PartitionValidator;
 import org.apache.stratos.cloud.controller.messaging.topology.TopologyBuilder;
-import org.apache.stratos.cloud.controller.statistics.publisher.BAMUsageDataPublisher;
+import org.apache.stratos.cloud.controller.statistics.publisher.CloudControllerPublisherFactory;
+import org.apache.stratos.cloud.controller.statistics.publisher.MemberStatusPublisher;
 import org.apache.stratos.cloud.controller.util.CloudControllerUtil;
+import org.apache.stratos.common.statistics.publisher.StatisticsPublisherType;
 import org.apache.stratos.messaging.domain.topology.MemberStatus;
 
 import java.util.Properties;
@@ -66,16 +68,25 @@ public class CloudControllerServiceUtil {
                 memberContext.getClusterId(), memberContext.getNetworkPartitionId(),
                 partitionId, memberContext.getMemberId());
         //member terminated time
-        Long timeStamp = System.currentTimeMillis();
-        // Publish statistics to BAM
-        BAMUsageDataPublisher.publish(memberContext.getMemberId(),
-                partitionId,
-                memberContext.getNetworkPartitionId(),
-                memberContext.getClusterInstanceId(),
-                memberContext.getClusterId(),
-                memberContext.getCartridgeType(),
-                MemberStatus.Terminated.toString(),
-                timeStamp, null, null, null);
+        Long timestamp = System.currentTimeMillis();
+        //publishing member status to DAS.
+        MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
+                createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
+        if (memStatusPublisher.isEnabled()) {
+            if (log.isDebugEnabled()) {
+                log.debug("Publishing Member Status to DAS");
+            }
+            memStatusPublisher.publish(timestamp,
+                    memberContext.getClusterId(),
+                    memberContext.getClusterInstanceId(),
+                    memberContext.getCartridgeType(),
+                    memberContext.getNetworkPartitionId(),
+                    memberContext.getPartition().getId(),
+                    memberContext.getMemberId(),
+                    MemberStatus.Terminated.toString());
+        } else {
+            log.warn("Member Status Publisher is not enabled");
+        }
 
         // Remove member context
         CloudControllerContext.getInstance().removeMemberContext(memberContext.getClusterId(),
