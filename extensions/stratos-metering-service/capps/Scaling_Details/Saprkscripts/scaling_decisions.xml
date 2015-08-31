@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Analytics>
+    <Name>httpd_log_analytics</Name>
+    <Script>
+        CREATE TEMPORARY TABLE scalingdecision
+        USING CarbonAnalytics
+        OPTIONS (tableName "SCALING_DECISION");
+
+        CREATE TEMPORARY TABLE scalingdetails
+        USING CarbonAnalytics
+        OPTIONS (tableName "SCALING_DETAILS", schema "timestamp STRING, scaling_decision_id STRING, cluster_id STRING, min_instance_count INT, max_instance_count INT, rif_predicted INT, rif_threshold INT ,rif_required_instances INT, mc_predicted INT, mc_threshold INT, mc_required_instances INT ,la_predicted INT, la_threshold INT,la_required_instances INT,required_instance_count INT ,active_instance_count INT, additional_instance_count INT, scaling_reason STRING");
+
+        INSERT OVERWRITE TABLE scalingdetails select time(timestamp),scaling_decision_id, cluster_id,
+        min_instance_count, max_instance_count, rif_predicted, rif_threshold,rif_required_instances, mc_predicted,
+        mc_threshold, mc_required_instances,la_predicted, la_threshold ,la_required_instances,required_instance_count
+        ,active_instance_count, additional_instance_count, scaling_reason from scalingdecision;
+
+    </Script>
+    <CronExpression>29 * * * * ?</CronExpression>
+</Analytics>

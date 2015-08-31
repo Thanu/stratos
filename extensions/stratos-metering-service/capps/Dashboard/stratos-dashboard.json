@@ -1,0 +1,139 @@
+{
+  "id": "stratos-dashboard",
+  "title": "Stratos Dashboard",
+  "description": "This is Stratos dashboard",
+  "permissions": {
+    "viewers": ["everyone"],
+    "editors": [
+      "Internal/everyone"
+    ]
+  },
+  "pages": [
+    {
+      "id": "landing",
+      "title": "Welcome",
+      "layout": {
+        "id": "single-column",
+        "title": "Single Column",
+        "description": "This is a layout generated through single-column.io",
+        "thumbnail": "store://layout/single-column/index.png",
+        "url": "store://layout/single-column/index.hbs",
+        "content": "<div class=\"row\">\n    <div id=\"a\" class=\"col-md-12 ues-component-box\"></div>\n    <div id=\"b\" class=\"col-md-12 ues-component-box\"></div>\n    <div id=\"c\" class=\"col-md-12 ues-component-box\"></div>\n</div>\n"
+      },
+      "content": {
+        "a": [
+          {
+            "id": "8nvt5eh1gtit3xr",
+            "content": {
+              "id": "Cluster_Member_Count",
+              "title": "Cluster Member Count",
+              "type": "gadget",
+              "thumbnail": "local://store/carbon.super/gadget/usa-business-revenue/index.png",
+              "data": {
+                "url": "local://store/carbon.super/gadget/Cluster_Member_Count/index.xml"
+              },
+              "styles": {
+                "title": "Cluster Member Count",
+                "height": "400",
+                "borders": true,
+                "titlePosition": "left"
+              },
+              "options": {
+                "dataSource": {
+                  "type": "STRING",
+                  "title": "Data Source",
+                  "value": "/portal/gadgets/bar-chart/datasource/dataFile4.jag",
+                  "options": [],
+                  "required": false
+                },
+                "updateGraph": {
+                  "type": "STRING",
+                  "title": "Update Interval (s)",
+                  "value": "No",
+                  "options": [],
+                  "required": false
+                }
+              },
+              "settings": {}
+            }
+          }
+        ],
+        "b": [
+          {
+            "id": "hj33aj5403d0wwmi",
+            "content": {
+              "id": "Member_Details",
+              "title": "Member Details",
+              "type": "gadget",
+              "thumbnail": "local://store/carbon.super/gadget/usa-business-revenue/index.png",
+              "data": {
+                "url": "local://store/carbon.super/gadget/Member_Details/index.xml"
+              },
+              "styles": {
+                "title": "Member Details",
+                "height": "400",
+                "borders": true,
+                "titlePosition": "left"
+              },
+              "options": {
+                "dataSource": {
+                  "type": "STRING",
+                  "title": "Data Source",
+                  "value": "/portal/gadgets/bar-chart/datasource/dataFile4.jag",
+                  "options": [],
+                  "required": false
+                },
+                "updateGraph": {
+                  "type": "STRING",
+                  "title": "Update Interval (s)",
+                  "value": "No",
+                  "options": [],
+                  "required": false
+                }
+              },
+              "settings": {}
+            }
+          }
+        ],
+        "c": [
+          {
+            "id": "js6hqaemot2r19k9",
+            "content": {
+              "id": "Scaling_Details",
+              "title": "Scaling Details",
+              "type": "gadget",
+              "thumbnail": "local://store/carbon.super/gadget/usa-business-revenue/index.png",
+              "data": {
+                "url": "local://store/carbon.super/gadget/Scaling_Details/index.xml"
+              },
+              "styles": {
+                "title": "Scaling Details",
+                "height": "400",
+                "borders": true,
+                "titlePosition": "left"
+              },
+              "options": {
+                "dataSource": {
+                  "type": "STRING",
+                  "title": "Data Source",
+                  "value": "/portal/gadgets/bar-chart/datasource/dataFile4.jag",
+                  "options": [],
+                  "required": false
+                },
+                "updateGraph": {
+                  "type": "STRING",
+                  "title": "Update Interval (s)",
+                  "value": "No",
+                  "options": [],
+                  "required": false
+                }
+              },
+              "settings": {}
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "landing": "landing"
+}
