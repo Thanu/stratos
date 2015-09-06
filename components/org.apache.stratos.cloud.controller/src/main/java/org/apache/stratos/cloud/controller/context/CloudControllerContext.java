@@ -803,16 +803,16 @@ public class CloudControllerContext implements Serializable {
         }
     }
 
-    public IaasProvider getIaasProviderOfPartition(String cartridgeUuid, String partitionId) {
+    public IaasProvider getIaasProviderOfPartition(String cartridgeUuid, String partitionUuid) {
         if (log.isDebugEnabled()) {
-            log.debug("Retrieving partition: " + partitionId + " for the Cartridge: " + this.hashCode() + ". "
+            log.debug("Retrieving partition: " + partitionUuid + " for the Cartridge: " + this.hashCode() + ". "
                     + "Current Partition List: " + getPartitionToIaasProvider(cartridgeUuid).keySet().toString());
         }
-        return getPartitionToIaasProvider(cartridgeUuid).get(partitionId);
+        return getPartitionToIaasProvider(cartridgeUuid).get(partitionUuid);
     }
 
-    public Map<String, IaasProvider> getPartitionToIaasProvider(String cartridgeType) {
-        return this.partitionToIaasProviderByCartridge.get(cartridgeType);
+    public Map<String, IaasProvider> getPartitionToIaasProvider(String cartridgeUuid) {
+        return this.partitionToIaasProviderByCartridge.get(cartridgeUuid);
     }
 
     public Map<String, List<IaasProvider>> getCartridgeTypeToIaasProviders() {

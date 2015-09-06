@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.stratos.cloud.controller.context.CloudControllerContext;
 import org.apache.stratos.cloud.controller.domain.Cartridge;
+import org.apache.stratos.cloud.controller.domain.IaasProvider;
 import org.apache.stratos.cloud.controller.domain.InstanceMetadata;
 import org.apache.stratos.cloud.controller.domain.MemberContext;
 import org.apache.stratos.cloud.controller.util.CloudControllerConstants;
@@ -64,7 +65,7 @@ public class DASMemberInformationPublisher extends ThriftStatisticsPublisher imp
 
             // Set payload definition
             payloadData.add(new Attribute(CloudControllerConstants.MEMBER_ID_COL, AttributeType.STRING));
-            payloadData.add(new Attribute(CloudControllerConstants.CLUSTER_INSTANCE_TYPE_COL, AttributeType.STRING));
+            payloadData.add(new Attribute(CloudControllerConstants.INSTANCE_TYPE_COL, AttributeType.STRING));
             payloadData.add(new Attribute(CloudControllerConstants.SCALING_DECISION_ID_COL, AttributeType.STRING));
             payloadData.add(new Attribute(CloudControllerConstants.IS_MULTI_TENANT_COL, AttributeType.STRING));
             payloadData.add(new Attribute(CloudControllerConstants.PRIV_IP_COL, AttributeType.STRING));
@@ -101,17 +102,17 @@ public class DASMemberInformationPublisher extends ThriftStatisticsPublisher imp
             @Override
             public void run() {
 
-
                 MemberContext memberContext = CloudControllerContext.getInstance().getMemberContextOfMemberId(memberId);
                 String cartridgeType = memberContext.getCartridgeType();
                 Cartridge cartridge = CloudControllerContext.getInstance().getCartridge(cartridgeType);
-                String instanceType = CloudControllerContext.getInstance().getIaasProviderOfPartition(cartridgeType,
-                        memberContext.getPartition().getId()).getProperty(CloudControllerConstants.INSTANCE_TYPE);
+                IaasProvider iaasProvider = CloudControllerContext.getInstance().getIaasProviderOfPartition(
+                        cartridge.getUuid(), memberContext.getPartition().getUuid());
+                String instanceType = iaasProvider.getProperty(CloudControllerConstants.INSTANCE_TYPE);
 
                 //adding payload data
                 List<Object> payload = new ArrayList<Object>();
                 payload.add(memberId);
-                payload.add(instanceType);
+                payload.add(handleNull(instanceType));
                 payload.add(scalingDecisionId);
                 payload.add(String.valueOf(cartridge.isMultiTenant()));
                 payload.add(handleNull(Arrays.toString(memberContext.getPrivateIPs())));
@@ -158,7 +159,8 @@ public class DASMemberInformationPublisher extends ThriftStatisticsPublisher imp
                                         "[public_IPs] %s [allocated_IPs] %s [host_name] %s [hypervisor] %s [cpu] %d " +
                                         "[ram] %d [image_id] %s [login_port] %d [os_name] %s " +
                                         "[os_version] %s [os_arch] %s [is_os_64bit] %b",
-                                memberId, instanceType, scalingDecisionId, String.valueOf(cartridge.isMultiTenant()),
+                                memberId, instanceType
+                                , scalingDecisionId, String.valueOf(cartridge.isMultiTenant()),
                                 memberContext.getPrivateIPs(), memberContext.getPublicIPs(),
                                 memberContext.getAllocatedIPs(), " ", " ", 0, 0, " ", 0, " ", " ", " ", false));
                     }

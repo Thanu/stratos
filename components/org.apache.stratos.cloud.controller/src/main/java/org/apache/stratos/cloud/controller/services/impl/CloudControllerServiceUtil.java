@@ -31,11 +31,14 @@ import org.apache.stratos.cloud.controller.exception.InvalidPartitionException;
 import org.apache.stratos.cloud.controller.iaases.Iaas;
 import org.apache.stratos.cloud.controller.iaases.PartitionValidator;
 import org.apache.stratos.cloud.controller.messaging.topology.TopologyBuilder;
+import org.apache.stratos.cloud.controller.messaging.topology.TopologyManager;
 import org.apache.stratos.cloud.controller.statistics.publisher.CloudControllerPublisherFactory;
 import org.apache.stratos.cloud.controller.statistics.publisher.MemberStatusPublisher;
 import org.apache.stratos.cloud.controller.util.CloudControllerUtil;
 import org.apache.stratos.common.statistics.publisher.StatisticsPublisherType;
 import org.apache.stratos.messaging.domain.topology.MemberStatus;
+import org.apache.stratos.messaging.domain.topology.Service;
+import org.apache.stratos.messaging.domain.topology.Topology;
 
 import java.util.Properties;
 
@@ -60,6 +63,9 @@ public class CloudControllerServiceUtil {
         if (memberContext == null) {
             return;
         }
+        Topology topology = TopologyManager.getTopology();
+        Service service = topology.getService(memberContext.getCartridgeType());
+        String applicationId = service.getCluster(memberContext.getClusterId()).getAppId();
 
         String partitionId = memberContext.getPartition() == null ? null : memberContext.getPartition().getUuid();
 
@@ -77,6 +83,7 @@ public class CloudControllerServiceUtil {
                 log.debug("Publishing Member Status to DAS");
             }
             memStatusPublisher.publish(timestamp,
+                    applicationId,
                     memberContext.getClusterId(),
                     memberContext.getClusterInstanceId(),
                     memberContext.getCartridgeType(),

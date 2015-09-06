@@ -102,7 +102,8 @@ public final class CloudControllerConstants {
     public static final String PAYLOAD_PREFIX = "payload_";
     public static final String MEMBER_ID_COL = "member_id";
     public static final String SERVICE_NAME_COL = "service_name";
-    public static final String CLUSTER_INSTANCE_TYPE_COL = "cluster_instnace_type";
+    public static final String INSTANCE_TYPE_COL = "instnace_type";
+    public static final String APPLICATION_ID_COL = "application_id";
     public static final String CLUSTER_ID_COL = "cluster_id";
     public static final String CLUSTER_INSTANCE_ID_COL = "cluster_instance_id";
     public static final String PARTITION_ID_COL = "partition_id";

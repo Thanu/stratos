@@ -414,7 +414,6 @@ public class TopologyBuilder {
         String lbClusterId = memberContext.getLbClusterId();
         long initTime = memberContext.getInitTime();
 
-
         if (cluster.memberExists(memberId)) {
             log.warn(String.format("Member %s already exists", memberId));
             return;
@@ -440,6 +439,7 @@ public class TopologyBuilder {
                     log.debug("Publishing Member Status to DAS");
                 }
                 memStatusPublisher.publish(timestamp,
+                        cluster.getAppId(),
                         memberContext.getClusterId(),
                         memberContext.getClusterInstanceId(),
                         memberContext.getCartridgeType(),
@@ -465,6 +465,7 @@ public class TopologyBuilder {
     public static void handleMemberInitializedEvent(MemberContext memberContext) {
         Topology topology = TopologyManager.getTopology();
         Service service = topology.getService(memberContext.getCartridgeType());
+        String applicationId = service.getCluster(memberContext.getClusterId()).getAppId();
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
                     memberContext.getCartridgeType()));
@@ -534,6 +535,7 @@ public class TopologyBuilder {
                         log.debug("Publishing Member Status to DAS");
                     }
                     memStatusPublisher.publish(timestamp,
+                            applicationId,
                             memberContext.getClusterId(),
                             memberContext.getClusterInstanceId(),
                             memberContext.getCartridgeType(),
@@ -565,6 +567,7 @@ public class TopologyBuilder {
         try {
             Topology topology = TopologyManager.getTopology();
             Service service = topology.getService(instanceStartedEvent.getServiceName());
+            String applicationId = service.getCluster(instanceStartedEvent.getClusterId()).getAppId();
             if (service == null) {
                 log.warn(String.format("Service %s does not exist",
                         instanceStartedEvent.getServiceName()));
@@ -610,6 +613,7 @@ public class TopologyBuilder {
                             log.debug("Publishing Member Status to DAS");
                         }
                         memStatusPublisher.publish(timestamp,
+                                applicationId,
                                 instanceStartedEvent.getClusterId(),
                                 instanceStartedEvent.getClusterInstanceId(),
                                 instanceStartedEvent.getServiceName(),
@@ -635,6 +639,7 @@ public class TopologyBuilder {
     public static void handleMemberActivated(InstanceActivatedEvent instanceActivatedEvent) {
         Topology topology = TopologyManager.getTopology();
         Service service = topology.getService(instanceActivatedEvent.getServiceName());
+        String applicationId = service.getCluster(instanceActivatedEvent.getClusterId()).getAppId();
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
                     instanceActivatedEvent.getServiceName()));
@@ -726,6 +731,7 @@ public class TopologyBuilder {
                         log.debug("Publishing Member Status to DAS");
                     }
                     memStatusPublisher.publish(timestamp,
+                            applicationId,
                             memberActivatedEvent.getClusterId(),
                             memberActivatedEvent.getClusterInstanceId(),
                             memberActivatedEvent.getServiceName(),
@@ -746,6 +752,7 @@ public class TopologyBuilder {
             throws InvalidMemberException, InvalidCartridgeTypeException {
         Topology topology = TopologyManager.getTopology();
         Service service = topology.getService(instanceReadyToShutdownEvent.getServiceName());
+        String applicationId = service.getCluster(instanceReadyToShutdownEvent.getClusterId()).getAppId();
         //update the status of the member
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
@@ -801,6 +808,7 @@ public class TopologyBuilder {
                 log.debug("Publishing Member Status to DAS");
             }
             memStatusPublisher.publish(timestamp,
+                    applicationId,
                     instanceReadyToShutdownEvent.getClusterId(),
                     instanceReadyToShutdownEvent.getClusterInstanceId(),
                     instanceReadyToShutdownEvent.getServiceName(),
