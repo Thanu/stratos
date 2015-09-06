@@ -37,7 +37,6 @@
         <module>cep/stratos-cep-extension</module>
         <module>cep/distribution/</module>
         <module>load-balancer</module>
-        <module>stratos-metering-service</module>
     </modules>
 </project>
 
