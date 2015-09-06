@@ -58,6 +58,7 @@ public class DASMemberStatusPublisher extends ThriftStatisticsPublisher implemen
 
             // Set payload definition
             payloadData.add(new Attribute(CloudControllerConstants.TIMESTAMP_COL, AttributeType.LONG));
+            payloadData.add(new Attribute(CloudControllerConstants.APPLICATION_ID_COL, AttributeType.STRING));
             payloadData.add(new Attribute(CloudControllerConstants.CLUSTER_ID_COL, AttributeType.STRING));
             payloadData.add(new Attribute(CloudControllerConstants.CLUSTER_INSTANCE_ID_COL, AttributeType.STRING));
             payloadData.add(new Attribute(CloudControllerConstants.SERVICE_NAME_COL, AttributeType.STRING));
@@ -76,6 +77,7 @@ public class DASMemberStatusPublisher extends ThriftStatisticsPublisher implemen
      * publishing Member Status to DAS.
      *
      * @param timestamp          Status changed time
+     * @param applicationId      Application Id
      * @param clusterId          Cluster Id
      * @param clusterInstanceId  Cluster Instance Id
      * @param networkPartitionId Network Partition Id
@@ -85,7 +87,7 @@ public class DASMemberStatusPublisher extends ThriftStatisticsPublisher implemen
      * @param status             Member Status
      */
     @Override
-    public void publish(final Long timestamp, final String clusterId, final String clusterInstanceId,
+    public void publish(final Long timestamp, final String applicationId, final String clusterId, final String clusterInstanceId,
                         final String serviceName, final String networkPartitionId, final String partitionId,
                         final String memberId, final String status) {
 
@@ -93,15 +95,17 @@ public class DASMemberStatusPublisher extends ThriftStatisticsPublisher implemen
             @Override
             public void run() {
                 if (log.isDebugEnabled()) {
-                    log.debug(String.format("Publishing member status: [timestamp] %d [cluster_id] %s " +
-                                    "[cluster_instance_id] %s [service_name] %s [network_partition_id] %s " +
-                                    "[partition_id] %s [member_id] %s [member_status] %s ",
-                            timestamp, clusterId, clusterInstanceId, serviceName,
+                    log.debug(String.format("Publishing member status: [timestamp] %d [application_id] %s " +
+                                    "[cluster_id] %s [cluster_instance_id] %s [service_name] %s " +
+                                    "[network_partition_id] %s [partition_id] %s " +
+                                    "[member_id] %s [member_status] %s ",
+                            timestamp, applicationId, clusterId, clusterInstanceId, serviceName,
                             networkPartitionId, partitionId, memberId, status));
                 }
                 //adding payload data
                 List<Object> payload = new ArrayList<Object>();
                 payload.add(timestamp);
+                payload.add(applicationId);
                 payload.add(clusterId);
                 payload.add(clusterInstanceId);
                 payload.add(serviceName);

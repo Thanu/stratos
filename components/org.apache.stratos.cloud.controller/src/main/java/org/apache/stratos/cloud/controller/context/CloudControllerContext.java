@@ -205,7 +205,7 @@ public class CloudControllerContext implements Serializable {
         cartridgeTypeToIaasProviders = distributedObjectProvider.getMap(CC_CARTRIDGE_TYPE_TO_IAAS_PROVIDER_MAP);
         applicationIdToClusterIdToPortMappings = distributedObjectProvider.getMap(CC_APPLICATION_ID_TO_CLUSTER_ID_TO_PORT_MAPPING_MAP);
 
-        if(!unitTest) {
+        if (!unitTest) {
             // Update context from the registry
             updateContextFromRegistry();
         }
@@ -864,6 +864,7 @@ public class CloudControllerContext implements Serializable {
 
     /**
      * Add a cluster port mapping.
+     *
      * @param portMapping
      */
     public void addClusterPortMapping(ClusterPortMapping portMapping) {
@@ -874,24 +875,25 @@ public class CloudControllerContext implements Serializable {
         Map<String, List<ClusterPortMapping>> clusterIdToPortMappings =
                 applicationIdToClusterIdToPortMappings.get(applicationId);
 
-        if(clusterIdToPortMappings == null) {
+        if (clusterIdToPortMappings == null) {
             clusterIdToPortMappings = new HashMap<String, List<ClusterPortMapping>>();
             applicationIdToClusterIdToPortMappings.put(applicationId, clusterIdToPortMappings);
         } else {
             portMappings = clusterIdToPortMappings.get(portMapping.getClusterId());
         }
-        if(portMappings == null) {
+        if (portMappings == null) {
             portMappings = new ArrayList<ClusterPortMapping>();
             clusterIdToPortMappings.put(clusterId, portMappings);
         }
 
-        if(!portMappings.contains(portMapping)) {
+        if (!portMappings.contains(portMapping)) {
             portMappings.add(portMapping);
         }
     }
 
     /**
      * Get cluster port mappings of an application cluster.
+     *
      * @param applicationUuid
      * @param clusterId
      * @return
@@ -900,7 +902,7 @@ public class CloudControllerContext implements Serializable {
         Map<String, List<ClusterPortMapping>> clusterIdToPortMappings =
                 applicationIdToClusterIdToPortMappings.get(applicationUuid);
 
-        if(clusterIdToPortMappings != null) {
+        if (clusterIdToPortMappings != null) {
             return clusterIdToPortMappings.get(clusterId);
         }
         return null;
@@ -908,10 +910,11 @@ public class CloudControllerContext implements Serializable {
 
     /**
      * Remove all the cluster port mappings of the given application.
+     *
      * @param applicationId
      */
     public void removeClusterPortMappings(String applicationId) {
-        if(applicationIdToClusterIdToPortMappings.containsKey(applicationId)) {
+        if (applicationIdToClusterIdToPortMappings.containsKey(applicationId)) {
             applicationIdToClusterIdToPortMappings.remove(applicationId);
         }
     }
