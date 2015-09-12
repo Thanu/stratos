@@ -58,6 +58,7 @@ public class DASMemberStatusPublisher extends ThriftStatisticsPublisher implemen
 
             // Set payload definition
             payloadData.add(new Attribute(CloudControllerConstants.TIMESTAMP_COL, AttributeType.LONG));
+            payloadData.add(new Attribute(CloudControllerConstants.TENANT_ID_COL, AttributeType.INT));
             payloadData.add(new Attribute(CloudControllerConstants.APPLICATION_ID_COL, AttributeType.STRING));
             payloadData.add(new Attribute(CloudControllerConstants.CLUSTER_ID_COL, AttributeType.STRING));
             payloadData.add(new Attribute(CloudControllerConstants.CLUSTER_INSTANCE_ID_COL, AttributeType.STRING));
@@ -85,9 +86,10 @@ public class DASMemberStatusPublisher extends ThriftStatisticsPublisher implemen
      * @param serviceName        Service Name
      * @param memberId           Member Id
      * @param status             Member Status
+     * @parm tenantId            Tenant Id
      */
     @Override
-    public void publish(final Long timestamp, final String applicationId, final String clusterId, final String clusterInstanceId,
+    public void publish(final Long timestamp, final int tenantId, final String applicationId, final String clusterId, final String clusterInstanceId,
                         final String serviceName, final String networkPartitionId, final String partitionId,
                         final String memberId, final String status) {
 
@@ -95,16 +97,17 @@ public class DASMemberStatusPublisher extends ThriftStatisticsPublisher implemen
             @Override
             public void run() {
                 if (log.isDebugEnabled()) {
-                    log.debug(String.format("Publishing member status: [timestamp] %d [application_id] %s " +
-                                    "[cluster_id] %s [cluster_instance_id] %s [service_name] %s " +
+                    log.debug(String.format("Publishing member status: [timestamp] %d [tenant_id] %d " +
+                                    "[application_id] %s [cluster_id] %s [cluster_instance_id] %s [service_name] %s " +
                                     "[network_partition_id] %s [partition_id] %s " +
                                     "[member_id] %s [member_status] %s ",
-                            timestamp, applicationId, clusterId, clusterInstanceId, serviceName,
+                            timestamp, tenantId, applicationId, clusterId, clusterInstanceId, serviceName,
                             networkPartitionId, partitionId, memberId, status));
                 }
                 //adding payload data
                 List<Object> payload = new ArrayList<Object>();
                 payload.add(timestamp);
+                payload.add(Integer.valueOf(tenantId));
                 payload.add(applicationId);
                 payload.add(clusterId);
                 payload.add(clusterInstanceId);

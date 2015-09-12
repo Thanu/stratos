@@ -29,6 +29,7 @@ public interface MemberStatusPublisher extends StatisticsPublisher {
      * Publishing member status.
      *
      * @param timestamp          Status changed time
+     * @param tenantId           Tenant Id
      * @param applicationId      Application Id
      * @param clusterId          Cluster Id
      * @param clusterInstanceId  Cluster Instance Id
@@ -38,6 +39,6 @@ public interface MemberStatusPublisher extends StatisticsPublisher {
      * @param memberId           Member Id
      * @param status             Member Status
      */
-    void publish(Long timestamp, String applicationId, String clusterId, String clusterInstanceId, String serviceName,
+    void publish(Long timestamp, int tenantId, String applicationId, String clusterId, String clusterInstanceId, String serviceName,
                  String networkPartitionId, String partitionId, String memberId, String status);
 }

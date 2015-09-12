@@ -21,6 +21,7 @@ package org.apache.stratos.cloud.controller.messaging.topology;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.stratos.autoscaler.stub.pojo.ApplicationContext;
 import org.apache.stratos.cloud.controller.context.CloudControllerContext;
 import org.apache.stratos.cloud.controller.domain.*;
 import org.apache.stratos.cloud.controller.exception.CloudControllerException;
@@ -33,6 +34,7 @@ import org.apache.stratos.cloud.controller.statistics.publisher.MemberInformatio
 import org.apache.stratos.cloud.controller.statistics.publisher.MemberStatusPublisher;
 import org.apache.stratos.cloud.controller.util.CloudControllerUtil;
 import org.apache.stratos.common.Property;
+import org.apache.stratos.common.client.AutoscalerServiceClient;
 import org.apache.stratos.common.constants.StratosConstants;
 import org.apache.stratos.common.statistics.publisher.StatisticsPublisherType;
 import org.apache.stratos.messaging.domain.application.ClusterDataHolder;
@@ -48,6 +50,7 @@ import org.apache.stratos.messaging.event.topology.*;
 import org.apache.stratos.metadata.client.defaults.DefaultMetaDataServiceClient;
 import org.apache.stratos.metadata.client.defaults.MetaDataServiceClient;
 
+import java.rmi.RemoteException;
 import java.util.*;
 
 /**
@@ -407,6 +410,15 @@ public class TopologyBuilder {
         Service service = topology.getService(memberContext.getCartridgeType());
         String clusterId = memberContext.getClusterId();
         Cluster cluster = service.getCluster(clusterId);
+        ApplicationContext applicationContext = null;
+        try {
+            applicationContext = AutoscalerServiceClient.getInstance().getApplication(cluster.getAppId());
+        } catch (RemoteException e) {
+            log.error(String.format("Error while getting the application context for [applicationUuid] %s" +
+                    cluster.getAppId()));
+        }
+        String applicationId = applicationContext.getApplicationId();
+        int tenantId = applicationContext.getTenantId();
         String memberId = memberContext.getMemberId();
         String clusterInstanceId = memberContext.getClusterInstanceId();
         String networkPartitionId = memberContext.getNetworkPartitionId();
@@ -439,7 +451,8 @@ public class TopologyBuilder {
                     log.debug("Publishing Member Status to DAS");
                 }
                 memStatusPublisher.publish(timestamp,
-                        cluster.getAppId(),
+                        tenantId,
+                        applicationId,
                         memberContext.getClusterId(),
                         memberContext.getClusterInstanceId(),
                         memberContext.getCartridgeType(),
@@ -465,7 +478,16 @@ public class TopologyBuilder {
     public static void handleMemberInitializedEvent(MemberContext memberContext) {
         Topology topology = TopologyManager.getTopology();
         Service service = topology.getService(memberContext.getCartridgeType());
-        String applicationId = service.getCluster(memberContext.getClusterId()).getAppId();
+        String applicationUuid = service.getCluster(memberContext.getClusterId()).getAppId();
+        ApplicationContext applicationContext = null;
+        try {
+            applicationContext = AutoscalerServiceClient.getInstance().getApplication(applicationUuid);
+        } catch (RemoteException e) {
+            log.error(String.format("Error while getting the application context for [applicationUuid] %s" +
+                    applicationUuid));
+        }
+        String applicationId = applicationContext.getApplicationId();
+        int tenantId = applicationContext.getTenantId();
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
                     memberContext.getCartridgeType()));
@@ -535,6 +557,7 @@ public class TopologyBuilder {
                         log.debug("Publishing Member Status to DAS");
                     }
                     memStatusPublisher.publish(timestamp,
+                            tenantId,
                             applicationId,
                             memberContext.getClusterId(),
                             memberContext.getClusterInstanceId(),
@@ -567,7 +590,16 @@ public class TopologyBuilder {
         try {
             Topology topology = TopologyManager.getTopology();
             Service service = topology.getService(instanceStartedEvent.getServiceName());
-            String applicationId = service.getCluster(instanceStartedEvent.getClusterId()).getAppId();
+            String applicationUuid = service.getCluster(instanceStartedEvent.getClusterId()).getAppId();
+            ApplicationContext applicationContext = null;
+            try {
+                applicationContext = AutoscalerServiceClient.getInstance().getApplication(applicationUuid);
+            } catch (RemoteException e) {
+                log.error(String.format("Error while getting the application context for [applicationUuid] %s" +
+                        applicationUuid));
+            }
+            String applicationId = applicationContext.getApplicationId();
+            int tenantId = applicationContext.getTenantId();
             if (service == null) {
                 log.warn(String.format("Service %s does not exist",
                         instanceStartedEvent.getServiceName()));
@@ -613,6 +645,7 @@ public class TopologyBuilder {
                             log.debug("Publishing Member Status to DAS");
                         }
                         memStatusPublisher.publish(timestamp,
+                                tenantId,
                                 applicationId,
                                 instanceStartedEvent.getClusterId(),
                                 instanceStartedEvent.getClusterInstanceId(),
@@ -639,7 +672,16 @@ public class TopologyBuilder {
     public static void handleMemberActivated(InstanceActivatedEvent instanceActivatedEvent) {
         Topology topology = TopologyManager.getTopology();
         Service service = topology.getService(instanceActivatedEvent.getServiceName());
-        String applicationId = service.getCluster(instanceActivatedEvent.getClusterId()).getAppId();
+        String applicationUuid = service.getCluster(instanceActivatedEvent.getClusterId()).getAppId();
+        ApplicationContext applicationContext = null;
+        try {
+            applicationContext = AutoscalerServiceClient.getInstance().getApplication(applicationUuid);
+        } catch (RemoteException e) {
+            log.error(String.format("Error while getting the application context for [applicationUuid] %s" +
+                    applicationUuid));
+        }
+        String applicationId = applicationContext.getApplicationId();
+        int tenantId = applicationContext.getTenantId();
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
                     instanceActivatedEvent.getServiceName()));
@@ -731,6 +773,7 @@ public class TopologyBuilder {
                         log.debug("Publishing Member Status to DAS");
                     }
                     memStatusPublisher.publish(timestamp,
+                            tenantId,
                             applicationId,
                             memberActivatedEvent.getClusterId(),
                             memberActivatedEvent.getClusterInstanceId(),
@@ -752,7 +795,17 @@ public class TopologyBuilder {
             throws InvalidMemberException, InvalidCartridgeTypeException {
         Topology topology = TopologyManager.getTopology();
         Service service = topology.getService(instanceReadyToShutdownEvent.getServiceName());
-        String applicationId = service.getCluster(instanceReadyToShutdownEvent.getClusterId()).getAppId();
+        String applicationUuid = service.getCluster(instanceReadyToShutdownEvent.getClusterId()).getAppId();
+        ApplicationContext applicationContext = null;
+        try {
+            applicationContext = AutoscalerServiceClient.getInstance().getApplication(applicationUuid);
+        } catch (RemoteException e) {
+            log.error(String.format("Error while getting the application context for [applicationUuid] %s" +
+                    applicationUuid));
+        }
+        String applicationId = applicationContext.getApplicationId();
+        int tenantId = applicationContext.getTenantId();
+
         //update the status of the member
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
@@ -808,6 +861,7 @@ public class TopologyBuilder {
                 log.debug("Publishing Member Status to DAS");
             }
             memStatusPublisher.publish(timestamp,
+                    tenantId,
                     applicationId,
                     instanceReadyToShutdownEvent.getClusterId(),
                     instanceReadyToShutdownEvent.getClusterInstanceId(),

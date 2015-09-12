@@ -22,6 +22,7 @@ package org.apache.stratos.cloud.controller.services.impl;
 import com.google.common.net.InetAddresses;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.stratos.autoscaler.stub.pojo.ApplicationContext;
 import org.apache.stratos.cloud.controller.context.CloudControllerContext;
 import org.apache.stratos.cloud.controller.domain.IaasProvider;
 import org.apache.stratos.cloud.controller.domain.MemberContext;
@@ -35,11 +36,13 @@ import org.apache.stratos.cloud.controller.messaging.topology.TopologyManager;
 import org.apache.stratos.cloud.controller.statistics.publisher.CloudControllerPublisherFactory;
 import org.apache.stratos.cloud.controller.statistics.publisher.MemberStatusPublisher;
 import org.apache.stratos.cloud.controller.util.CloudControllerUtil;
+import org.apache.stratos.common.client.AutoscalerServiceClient;
 import org.apache.stratos.common.statistics.publisher.StatisticsPublisherType;
 import org.apache.stratos.messaging.domain.topology.MemberStatus;
 import org.apache.stratos.messaging.domain.topology.Service;
 import org.apache.stratos.messaging.domain.topology.Topology;
 
+import java.rmi.RemoteException;
 import java.util.Properties;
 
 /**
@@ -65,7 +68,16 @@ public class CloudControllerServiceUtil {
         }
         Topology topology = TopologyManager.getTopology();
         Service service = topology.getService(memberContext.getCartridgeType());
-        String applicationId = service.getCluster(memberContext.getClusterId()).getAppId();
+        String applicationUuid = service.getCluster(memberContext.getClusterId()).getAppId();
+        ApplicationContext applicationContext = null;
+        try {
+            applicationContext = AutoscalerServiceClient.getInstance().getApplication(applicationUuid);
+        } catch (RemoteException e) {
+            log.error(String.format("Error while getting the application context for [applicationUuid] %s" +
+                    applicationUuid));
+        }
+        String applicationId = applicationContext.getApplicationId();
+        int tenantId = applicationContext.getTenantId();
 
         String partitionId = memberContext.getPartition() == null ? null : memberContext.getPartition().getUuid();
 
@@ -83,6 +95,7 @@ public class CloudControllerServiceUtil {
                 log.debug("Publishing Member Status to DAS");
             }
             memStatusPublisher.publish(timestamp,
+                    tenantId,
                     applicationId,
                     memberContext.getClusterId(),
                     memberContext.getClusterInstanceId(),

@@ -48,6 +48,7 @@ public class DASMemberInformationPublisher extends ThriftStatisticsPublisher imp
     private static final String DATA_STREAM_NAME = "member_info";
     private static final String VERSION = "1.0.0";
     private static final String DAS_THRIFT_CLIENT_NAME = "das";
+    private static final String NULL_VALUE = "Value Not Found";
     private ExecutorService executorService;
 
     public DASMemberInformationPublisher() {
@@ -143,15 +144,15 @@ public class DASMemberInformationPublisher extends ThriftStatisticsPublisher imp
                                 metadata.getOperatingSystemArchitecture(), metadata.isOperatingSystem64bit()));
                     }
                 } else {
-                    payload.add(" ");
-                    payload.add(" ");
+                    payload.add(NULL_VALUE);
+                    payload.add(NULL_VALUE);
                     payload.add(Integer.valueOf(0));
                     payload.add(Integer.valueOf(0));
-                    payload.add(" ");
+                    payload.add(NULL_VALUE);
                     payload.add(Integer.valueOf(0));
-                    payload.add(" ");
-                    payload.add(" ");
-                    payload.add(" ");
+                    payload.add(NULL_VALUE);
+                    payload.add(NULL_VALUE);
+                    payload.add(NULL_VALUE);
                     payload.add(Boolean.valueOf(false));
                     if (log.isDebugEnabled()) {
                         log.debug(String.format("Publishing member information: [member_id] %s [instance_type] %s " +
@@ -162,7 +163,8 @@ public class DASMemberInformationPublisher extends ThriftStatisticsPublisher imp
                                 memberId, instanceType
                                 , scalingDecisionId, String.valueOf(cartridge.isMultiTenant()),
                                 memberContext.getPrivateIPs(), memberContext.getPublicIPs(),
-                                memberContext.getAllocatedIPs(), " ", " ", 0, 0, " ", 0, " ", " ", " ", false));
+                                memberContext.getAllocatedIPs(), NULL_VALUE, NULL_VALUE, 0, 0, NULL_VALUE, 0,
+                                NULL_VALUE, NULL_VALUE, NULL_VALUE, false));
                     }
                 }
                 DASMemberInformationPublisher.super.publish(payload.toArray());
@@ -175,6 +177,6 @@ public class DASMemberInformationPublisher extends ThriftStatisticsPublisher imp
         if (null != param) {
             return param;
         }
-        return "NULL";
+        return NULL_VALUE;
     }
 }
