@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.stratos.autoscaler.stub.pojo.ApplicationContext;
 import org.apache.stratos.cloud.controller.context.CloudControllerContext;
 import org.apache.stratos.cloud.controller.domain.*;
 import org.apache.stratos.cloud.controller.exception.CloudControllerException;
@@ -29,25 +30,33 @@ import org.apache.stratos.cloud.controller.exception.InvalidCartridgeTypeExcepti
 import org.apache.stratos.cloud.controller.exception.InvalidMemberException;
 import org.apache.stratos.cloud.controller.iaases.kubernetes.KubernetesIaas;
 import org.apache.stratos.cloud.controller.messaging.publisher.TopologyEventPublisher;
-import org.apache.stratos.cloud.controller.statistics.publisher.BAMUsageDataPublisher;
+import org.apache.stratos.cloud.controller.statistics.publisher.CloudControllerPublisherFactory;
+import org.apache.stratos.cloud.controller.statistics.publisher.MemberInformationPublisher;
+import org.apache.stratos.cloud.controller.statistics.publisher.MemberStatusPublisher;
 import org.apache.stratos.cloud.controller.util.CloudControllerUtil;
 import org.apache.stratos.common.Property;
 import org.apache.stratos.kubernetes.client.KubernetesConstants;
+import org.apache.stratos.common.client.AutoscalerServiceClient;
+import org.apache.stratos.common.constants.StratosConstants;
+import org.apache.stratos.common.statistics.publisher.StatisticsPublisherType;
 import org.apache.stratos.messaging.domain.application.ClusterDataHolder;
 import org.apache.stratos.messaging.domain.instance.ClusterInstance;
-import org.apache.stratos.messaging.domain.topology.*;
+import org.apache.stratos.messaging.event.topology.*;
+import org.apache.stratos.metadata.client.defaults.DefaultMetaDataServiceClient;
+import org.apache.stratos.metadata.client.defaults.MetaDataServiceClient;
 import org.apache.stratos.messaging.event.application.ApplicationInstanceTerminatedEvent;
-import org.apache.stratos.messaging.event.cluster.status.*;
+import org.apache.stratos.messaging.event.cluster.status.ClusterStatusClusterResetEvent;
 import org.apache.stratos.messaging.event.instance.status.InstanceActivatedEvent;
 import org.apache.stratos.messaging.event.instance.status.InstanceMaintenanceModeEvent;
 import org.apache.stratos.messaging.event.instance.status.InstanceReadyToShutdownEvent;
 import org.apache.stratos.messaging.event.instance.status.InstanceStartedEvent;
-import org.apache.stratos.messaging.event.topology.*;
-import org.apache.stratos.metadata.client.defaults.DefaultMetaDataServiceClient;
-import org.apache.stratos.metadata.client.defaults.MetaDataServiceClient;
-
+import org.apache.stratos.messaging.event.topology.ClusterInstanceCreatedEvent;
+import org.apache.stratos.messaging.event.topology.MemberActivatedEvent;
+import org.apache.stratos.messaging.event.topology.MemberMaintenanceModeEvent;
+import org.apache.stratos.messaging.event.topology.MemberReadyToShutdownEvent;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.rmi.RemoteException;
 import java.util.*;
 
 /**
@@ -380,6 +389,18 @@ public class TopologyBuilder {
         String clusterInstanceId = memberContext.getClusterInstanceId();
         String networkPartitionId = memberContext.getNetworkPartitionId();
         String partitionId = memberContext.getPartition().getId();
+
+        ApplicationContext applicationContext = null;
+        try {
+            applicationContext = AutoscalerServiceClient.getInstance().getApplication(cluster.getAppId());
+        } catch (RemoteException e) {
+            String message = String.format("Error while getting the application context for [application] %s" +
+                    cluster.getAppId());
+            log.error(message, e);
+        }
+        String applicationId = applicationContext.getApplicationId();
+        int tenantId = applicationContext.getTenantId();
+
         String lbClusterId = memberContext.getLbClusterId();
         long initTime = memberContext.getInitTime();
 
@@ -397,6 +418,31 @@ public class TopologyBuilder {
             member.setProperties(CloudControllerUtil.toJavaUtilProperties(memberContext.getProperties()));
             cluster.addMember(member);
             TopologyManager.updateTopology(topology);
+
+            //member created time
+            Long timestamp = System.currentTimeMillis();
+            //publishing member status to DAS
+            MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
+                    createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
+
+            if (memStatusPublisher.isEnabled()) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Publishing Member Status to DAS");
+                }
+                memStatusPublisher.publish(timestamp,
+                        tenantId,
+                        applicationId,
+                        memberContext.getClusterId(),
+                        memberContext.getClusterInstanceId(),
+                        memberContext.getCartridgeType(),
+                        memberContext.getNetworkPartitionId(),
+                        memberContext.getPartition().getId(),
+                        memberContext.getMemberId(),
+                        MemberStatus.Created.toString());
+            } else {
+                log.warn("Member Status Publisher is not enabled");
+            }
+
         } finally {
             TopologyManager.releaseWriteLock();
         }
@@ -412,6 +458,19 @@ public class TopologyBuilder {
     public static void handleMemberInitializedEvent(MemberContext memberContext) {
         Topology topology = TopologyManager.getTopology();
         Service service = topology.getService(memberContext.getCartridgeType());
+
+        String applicationId = service.getCluster(memberContext.getClusterId()).getAppId();
+        ApplicationContext applicationContext = null;
+        try {
+            applicationContext = AutoscalerServiceClient.getInstance().getApplication(applicationId);
+        } catch (RemoteException e) {
+            String message = String.format("Error while getting the application context for [application] %s" +
+                    applicationId);
+            log.error(message, e);
+        }
+        applicationId = applicationContext.getApplicationId();
+        int tenantId = applicationContext.getTenantId();
+
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
                     memberContext.getCartridgeType()));
@@ -465,18 +524,48 @@ public class TopologyBuilder {
                 log.info("Member status updated to initialized");
 
                 TopologyManager.updateTopology(topology);
-
+                //member intialized time
+                Long timestamp = System.currentTimeMillis();
                 TopologyEventPublisher.sendMemberInitializedEvent(memberContext);
-                //publishing data
-                BAMUsageDataPublisher.publish(memberContext.getMemberId(),
-                        memberContext.getPartition().getId(),
-                        memberContext.getNetworkPartitionId(),
-                        memberContext.getClusterId(),
-                        memberContext.getCartridgeType(),
-                        MemberStatus.Initialized.toString(),
-                        null);
+                //publishing member information and status to DAS
+                MemberInformationPublisher memInfoPublisher = CloudControllerPublisherFactory.
+                        createMemberInformationPublisher(StatisticsPublisherType.WSO2DAS);
+
+                MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
+                        createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
+
+                if (memInfoPublisher.isEnabled()) {
+                    if (log.isDebugEnabled()) {
+                        log.info("Publishing Member Information");
+                    }
+                    String scalingDecisionId = memberContext.getProperties().getProperty(
+                            StratosConstants.SCALING_DECISION_ID).getValue();
+                    memInfoPublisher.publish(memberContext.getMemberId(), scalingDecisionId,
+                            memberContext.getInstanceMetadata());
+                } else {
+                    log.warn("Member Information Publisher is not enabled");
+                }
+                if (memStatusPublisher.isEnabled()) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Publishing Member Status to DAS");
+                    }
+                    memStatusPublisher.publish(timestamp,
+                            tenantId,
+                            applicationId,
+                            memberContext.getClusterId(),
+                            memberContext.getClusterInstanceId(),
+                            memberContext.getCartridgeType(),
+                            memberContext.getNetworkPartitionId(),
+                            memberContext.getPartition().getId(),
+                            memberContext.getMemberId(),
+                            MemberStatus.Initialized.toString());
+                } else {
+                    log.warn("Member Status Publisher is not enabled");
+                }
             }
-        } finally {
+        } finally
+
+        {
             TopologyManager.releaseWriteLock();
         }
     }
@@ -496,6 +585,17 @@ public class TopologyBuilder {
         try {
             Topology topology = TopologyManager.getTopology();
             Service service = topology.getService(instanceStartedEvent.getServiceName());
+            String applicationId = service.getCluster(instanceStartedEvent.getClusterId()).getAppId();
+            ApplicationContext applicationContext = null;
+            try {
+                applicationContext = AutoscalerServiceClient.getInstance().getApplication(applicationId);
+            } catch (RemoteException e) {
+                String message = String.format("Error while getting the application context for [application] %s" +
+                        applicationId);
+                log.error(message, e);
+            }
+            applicationId = applicationContext.getApplicationId();
+            int tenantId = applicationContext.getTenantId();
             if (service == null) {
                 log.warn(String.format("Service %s does not exist",
                         instanceStartedEvent.getServiceName()));
@@ -528,16 +628,31 @@ public class TopologyBuilder {
                     log.info("member started event adding status started");
 
                     TopologyManager.updateTopology(topology);
+                    //member started time
+                    Long timestamp = System.currentTimeMillis();
                     //memberStartedEvent.
                     TopologyEventPublisher.sendMemberStartedEvent(instanceStartedEvent);
-                    //publishing data
-                    BAMUsageDataPublisher.publish(instanceStartedEvent.getMemberId(),
-                            instanceStartedEvent.getPartitionId(),
-                            instanceStartedEvent.getNetworkPartitionId(),
-                            instanceStartedEvent.getClusterId(),
-                            instanceStartedEvent.getServiceName(),
-                            MemberStatus.Starting.toString(),
-                            null);
+                    //publishing member status to DAS
+                    MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
+                            createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
+
+                    if (memStatusPublisher.isEnabled()) {
+                        if (log.isDebugEnabled()) {
+                            log.debug("Publishing Member Status to DAS");
+                        }
+                        memStatusPublisher.publish(timestamp,
+                                tenantId,
+                                applicationId,
+                                instanceStartedEvent.getClusterId(),
+                                instanceStartedEvent.getClusterInstanceId(),
+                                instanceStartedEvent.getServiceName(),
+                                instanceStartedEvent.getNetworkPartitionId(),
+                                instanceStartedEvent.getPartitionId(),
+                                instanceStartedEvent.getMemberId(),
+                                MemberStatus.Starting.toString());
+                    } else {
+                        log.warn("Member Status Publisher is not enabled");
+                    }
                 }
             } finally {
                 TopologyManager.releaseWriteLock();
@@ -553,6 +668,18 @@ public class TopologyBuilder {
     public static void handleMemberActivated(InstanceActivatedEvent instanceActivatedEvent) {
         Topology topology = TopologyManager.getTopology();
         Service service = topology.getService(instanceActivatedEvent.getServiceName());
+
+        String applicationId = service.getCluster(instanceActivatedEvent.getClusterId()).getAppId();
+        ApplicationContext applicationContext = null;
+        try {
+            applicationContext = AutoscalerServiceClient.getInstance().getApplication(applicationId);
+        } catch (RemoteException e) {
+            String message = String.format("Error while getting the application context for [applicationUuid] %s" +
+                    applicationId);
+            log.error(message, e);
+        }
+        applicationId = applicationContext.getApplicationId();
+        int tenantId = applicationContext.getTenantId();
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
                     instanceActivatedEvent.getServiceName()));
@@ -588,7 +715,8 @@ public class TopologyBuilder {
             TopologyManager.acquireWriteLock();
             // try update lifecycle state
             if (!member.isStateTransitionValid(MemberStatus.Active)) {
-                log.error("Invalid state transition from [" + member.getStatus() + "] to [" + MemberStatus.Active + "]");
+                log.error("Invalid state transition from [" + member.getStatus() + "] to [" +
+                        MemberStatus.Active + "]");
                 return;
             } else {
                 member.setStatus(MemberStatus.Active);
@@ -633,15 +761,31 @@ public class TopologyBuilder {
 
                 // Publish member activated event
                 TopologyEventPublisher.sendMemberActivatedEvent(memberActivatedEvent);
+                //member activated time
+                Long timestamp = System.currentTimeMillis();
+                // Publish member activated event
+                TopologyEventPublisher.sendMemberActivatedEvent(memberActivatedEvent);
 
-                // Publish statistics data
-                BAMUsageDataPublisher.publish(memberActivatedEvent.getMemberId(),
-                        memberActivatedEvent.getPartitionId(),
-                        memberActivatedEvent.getNetworkPartitionId(),
-                        memberActivatedEvent.getClusterId(),
-                        memberActivatedEvent.getServiceName(),
-                        MemberStatus.Active.toString(),
-                        null);
+                //publishing member status to DAS
+                MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
+                        createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
+                if (memStatusPublisher.isEnabled()) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Publishing Member Status to DAS");
+                    }
+                    memStatusPublisher.publish(timestamp,
+                            tenantId,
+                            applicationId,
+                            memberActivatedEvent.getClusterId(),
+                            memberActivatedEvent.getClusterInstanceId(),
+                            memberActivatedEvent.getServiceName(),
+                            memberActivatedEvent.getNetworkPartitionId(),
+                            memberActivatedEvent.getPartitionId(),
+                            memberActivatedEvent.getMemberId(),
+                            MemberStatus.Active.toString());
+                } else {
+                    log.warn("Member Status Publisher is not enabled");
+                }
             }
         } finally {
             TopologyManager.releaseWriteLock();
@@ -652,6 +796,17 @@ public class TopologyBuilder {
             throws InvalidMemberException, InvalidCartridgeTypeException {
         Topology topology = TopologyManager.getTopology();
         Service service = topology.getService(instanceReadyToShutdownEvent.getServiceName());
+        String applicationId = service.getCluster(instanceReadyToShutdownEvent.getClusterId()).getAppId();
+        ApplicationContext applicationContext = null;
+        try {
+            applicationContext = AutoscalerServiceClient.getInstance().getApplication(applicationId);
+        } catch (RemoteException e) {
+            String message = String.format("Error while getting the application context for [applicationUuid] %s" +
+                    applicationId);
+            log.error(message, e);
+        }
+        applicationId = applicationContext.getApplicationId();
+        int tenantId = applicationContext.getTenantId();
         //update the status of the member
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
@@ -680,6 +835,8 @@ public class TopologyBuilder {
                 instanceReadyToShutdownEvent.getMemberId(),
                 instanceReadyToShutdownEvent.getNetworkPartitionId(),
                 instanceReadyToShutdownEvent.getPartitionId());
+        //member ReadyToShutDown state change time
+        Long timestamp = null;
         try {
             TopologyManager.acquireWriteLock();
 
@@ -692,18 +849,31 @@ public class TopologyBuilder {
             log.info("Member Ready to shut down event adding status started");
 
             TopologyManager.updateTopology(topology);
+            timestamp = System.currentTimeMillis();
         } finally {
             TopologyManager.releaseWriteLock();
         }
         TopologyEventPublisher.sendMemberReadyToShutdownEvent(memberReadyToShutdownEvent);
-        //publishing data
-        BAMUsageDataPublisher.publish(instanceReadyToShutdownEvent.getMemberId(),
-                instanceReadyToShutdownEvent.getPartitionId(),
-                instanceReadyToShutdownEvent.getNetworkPartitionId(),
-                instanceReadyToShutdownEvent.getClusterId(),
-                instanceReadyToShutdownEvent.getServiceName(),
-                MemberStatus.ReadyToShutDown.toString(),
-                null);
+        //publishing member status to DAS.
+        MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
+                createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
+        if (memStatusPublisher.isEnabled()) {
+            if (log.isDebugEnabled()) {
+                log.debug("Publishing Member Status to DAS");
+            }
+            memStatusPublisher.publish(timestamp,
+                    tenantId,
+                    applicationId,
+                    instanceReadyToShutdownEvent.getClusterId(),
+                    instanceReadyToShutdownEvent.getClusterInstanceId(),
+                    instanceReadyToShutdownEvent.getServiceName(),
+                    instanceReadyToShutdownEvent.getNetworkPartitionId(),
+                    instanceReadyToShutdownEvent.getPartitionId(),
+                    instanceReadyToShutdownEvent.getMemberId(),
+                    MemberStatus.ReadyToShutDown.toString());
+        } else {
+            log.warn("Member Status Publisher is not enabled");
+        }
         //termination of particular instance will be handled by autoscaler
     }
 
@@ -820,7 +990,8 @@ public class TopologyBuilder {
         }
     }
 
-    public static void handleClusterActivatedEvent(ClusterStatusClusterActivatedEvent clusterStatusClusterActivatedEvent) {
+    public static void handleClusterActivatedEvent(ClusterStatusClusterActivatedEvent
+                                                           clusterStatusClusterActivatedEvent) {
 
         Topology topology = TopologyManager.getTopology();
         Service service = topology.getService(clusterStatusClusterActivatedEvent.getServiceName());
@@ -856,7 +1027,7 @@ public class TopologyBuilder {
             Collection<KubernetesService> kubernetesServices = clusterContext.getKubernetesServices();
 
             if (kubernetesServices != null) {
-               
+
                 try {
                     // Generate access URLs for kubernetes services
                     for (KubernetesService kubernetesService : kubernetesServices) {
