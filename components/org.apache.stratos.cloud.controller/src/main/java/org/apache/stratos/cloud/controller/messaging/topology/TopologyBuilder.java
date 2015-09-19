@@ -35,26 +35,23 @@ import org.apache.stratos.cloud.controller.statistics.publisher.MemberInformatio
 import org.apache.stratos.cloud.controller.statistics.publisher.MemberStatusPublisher;
 import org.apache.stratos.cloud.controller.util.CloudControllerUtil;
 import org.apache.stratos.common.Property;
-import org.apache.stratos.kubernetes.client.KubernetesConstants;
 import org.apache.stratos.common.client.AutoscalerServiceClient;
 import org.apache.stratos.common.constants.StratosConstants;
 import org.apache.stratos.common.statistics.publisher.StatisticsPublisherType;
+import org.apache.stratos.kubernetes.client.KubernetesConstants;
 import org.apache.stratos.messaging.domain.application.ClusterDataHolder;
 import org.apache.stratos.messaging.domain.instance.ClusterInstance;
-import org.apache.stratos.messaging.event.topology.*;
 import org.apache.stratos.messaging.domain.topology.*;
-import org.apache.stratos.metadata.client.defaults.DefaultMetaDataServiceClient;
-import org.apache.stratos.metadata.client.defaults.MetaDataServiceClient;
 import org.apache.stratos.messaging.event.application.ApplicationInstanceTerminatedEvent;
 import org.apache.stratos.messaging.event.cluster.status.*;
 import org.apache.stratos.messaging.event.instance.status.InstanceActivatedEvent;
 import org.apache.stratos.messaging.event.instance.status.InstanceMaintenanceModeEvent;
 import org.apache.stratos.messaging.event.instance.status.InstanceReadyToShutdownEvent;
 import org.apache.stratos.messaging.event.instance.status.InstanceStartedEvent;
-import org.apache.stratos.messaging.event.topology.ClusterInstanceCreatedEvent;
-import org.apache.stratos.messaging.event.topology.MemberActivatedEvent;
-import org.apache.stratos.messaging.event.topology.MemberMaintenanceModeEvent;
-import org.apache.stratos.messaging.event.topology.MemberReadyToShutdownEvent;
+import org.apache.stratos.messaging.event.topology.*;
+import org.apache.stratos.metadata.client.defaults.DefaultMetaDataServiceClient;
+import org.apache.stratos.metadata.client.defaults.MetaDataServiceClient;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.rmi.RemoteException;
@@ -157,7 +154,6 @@ public class TopologyBuilder {
             }
         }
     }
-
 
 
     public static void handleApplicationClustersCreated(String appId, List<Cluster> appClusters) {
@@ -399,7 +395,7 @@ public class TopologyBuilder {
                     cluster.getAppId());
             log.error(message, e);
         }
-
+        String clusterAlias = CloudControllerUtil.getAliasFromClusterId(memberContext.getClusterId());
         String lbClusterId = memberContext.getLbClusterId();
         long initTime = memberContext.getInitTime();
 
@@ -432,6 +428,7 @@ public class TopologyBuilder {
                         applicationContext.getTenantId(),
                         cluster.getAppId(),
                         memberContext.getClusterId(),
+                        clusterAlias,
                         memberContext.getClusterInstanceId(),
                         memberContext.getCartridgeType(),
                         memberContext.getNetworkPartitionId(),
@@ -467,6 +464,7 @@ public class TopologyBuilder {
                     applicationId);
             log.error(message, e);
         }
+        String clusterAlias = CloudControllerUtil.getAliasFromClusterId(memberContext.getClusterId());
 
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
@@ -550,6 +548,7 @@ public class TopologyBuilder {
                             applicationContext.getTenantId(),
                             applicationId,
                             memberContext.getClusterId(),
+                            clusterAlias,
                             memberContext.getClusterInstanceId(),
                             memberContext.getCartridgeType(),
                             memberContext.getNetworkPartitionId(),
@@ -591,6 +590,7 @@ public class TopologyBuilder {
                         applicationId);
                 log.error(message, e);
             }
+            String clusterAlias = CloudControllerUtil.getAliasFromClusterId(instanceStartedEvent.getClusterId());
             if (service == null) {
                 log.warn(String.format("Service %s does not exist",
                         instanceStartedEvent.getServiceName()));
@@ -639,6 +639,7 @@ public class TopologyBuilder {
                                 applicationContext.getTenantId(),
                                 applicationId,
                                 instanceStartedEvent.getClusterId(),
+                                clusterAlias,
                                 instanceStartedEvent.getClusterInstanceId(),
                                 instanceStartedEvent.getServiceName(),
                                 instanceStartedEvent.getNetworkPartitionId(),
@@ -673,6 +674,7 @@ public class TopologyBuilder {
                     applicationId);
             log.error(message, e);
         }
+        String clusterAlias = CloudControllerUtil.getAliasFromClusterId(instanceActivatedEvent.getClusterId());
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
                     instanceActivatedEvent.getServiceName()));
@@ -770,6 +772,7 @@ public class TopologyBuilder {
                             applicationContext.getTenantId(),
                             applicationId,
                             memberActivatedEvent.getClusterId(),
+                            clusterAlias,
                             memberActivatedEvent.getClusterInstanceId(),
                             memberActivatedEvent.getServiceName(),
                             memberActivatedEvent.getNetworkPartitionId(),
@@ -798,6 +801,7 @@ public class TopologyBuilder {
                     applicationId);
             log.error(message, e);
         }
+        String clusterAlias = CloudControllerUtil.getAliasFromClusterId(instanceReadyToShutdownEvent.getClusterId());
         //update the status of the member
         if (service == null) {
             log.warn(String.format("Service %s does not exist",
@@ -856,6 +860,7 @@ public class TopologyBuilder {
                     applicationContext.getTenantId(),
                     applicationId,
                     instanceReadyToShutdownEvent.getClusterId(),
+                    clusterAlias,
                     instanceReadyToShutdownEvent.getClusterInstanceId(),
                     instanceReadyToShutdownEvent.getServiceName(),
                     instanceReadyToShutdownEvent.getNetworkPartitionId(),
