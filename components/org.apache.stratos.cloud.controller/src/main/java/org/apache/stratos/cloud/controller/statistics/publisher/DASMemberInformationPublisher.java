@@ -107,7 +107,7 @@ public class DASMemberInformationPublisher extends ThriftStatisticsPublisher imp
                 String cartridgeType = memberContext.getCartridgeType();
                 Cartridge cartridge = CloudControllerContext.getInstance().getCartridge(cartridgeType);
                 IaasProvider iaasProvider = CloudControllerContext.getInstance().getIaasProviderOfPartition(
-                        cartridge.getUuid(), memberContext.getPartition().getUuid());
+                        cartridge.getType(), memberContext.getPartition().getId());
                 String instanceType = iaasProvider.getProperty(CloudControllerConstants.INSTANCE_TYPE);
 
                 //adding payload data

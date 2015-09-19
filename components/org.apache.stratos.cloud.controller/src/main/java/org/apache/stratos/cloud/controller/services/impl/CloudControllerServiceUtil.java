@@ -73,12 +73,10 @@ public class CloudControllerServiceUtil {
         try {
             applicationContext = AutoscalerServiceClient.getInstance().getApplication(applicationId);
         } catch (RemoteException e) {
-            String message = String.format("Error while getting the application context for [applicationId] %s" +
+            String message = String.format("Error while getting the application context for [application] %s" +
                     applicationId);
             log.error(message, e);
         }
-        applicationId = applicationContext.getApplicationId();
-        int tenantId = applicationContext.getTenantId();
 
         String partitionId = memberContext.getPartition() == null ? null : memberContext.getPartition().getId();
 
@@ -97,7 +95,7 @@ public class CloudControllerServiceUtil {
                 log.debug("Publishing Member Status to DAS");
             }
             memStatusPublisher.publish(timestamp,
-                    tenantId,
+                    applicationContext.getTenantId(),
                     applicationId,
                     memberContext.getClusterId(),
                     memberContext.getClusterInstanceId(),
