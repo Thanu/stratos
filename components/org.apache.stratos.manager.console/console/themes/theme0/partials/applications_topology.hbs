@@ -87,7 +87,8 @@
 
 </div>
 <script type="text/javascript">
-    var topologydata = {{{topologyData}}};
+    var tenantId = '{{#tenantID}}{{/tenantID}}';
+    var topologyData = {{{topologyData}}};
     var applicationJSON = {{{applicationJSON}}};
 $(window).load(function() {
 
@@ -97,7 +98,7 @@ $(window).load(function() {
     });
 
     //initial generation with deafult call
-    update(genTree(topologydata));
+    update(genTree(topologyData));
 
     $('#refresh').click(function(){
         //get ajax call
