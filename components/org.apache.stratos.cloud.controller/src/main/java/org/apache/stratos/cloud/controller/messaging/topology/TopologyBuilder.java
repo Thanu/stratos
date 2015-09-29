@@ -1017,7 +1017,7 @@ public class TopologyBuilder {
                                         // Using type URI since only http, https, ftp, file, jar protocols are supported in URL
                                         URI accessURL = new URI(kubernetesService.getProtocol(), null, publicIP,
                                                 kubernetesService.getPort(), null, null, null);
-                                        cluster.addAccessUrl(accessURL.toString());
+                                        cluster.addAccessUrl(clusterStatusClusterActivatedEvent.getInstanceId(),accessURL.toString());
                                         clusterInstanceActivatedEvent.addAccessUrl(accessURL.toString());
                                     } else {
                                         log.error(String.format("Could not create access URL for [Kubernetes-service] %s , " +
@@ -1212,7 +1212,7 @@ public class TopologyBuilder {
                 ClusterContext clusterContext =
                         CloudControllerContext.getInstance().getClusterContext(event.getClusterId());
 
-                KubernetesIaas.removeKubernetesServices(clusterContext);
+                KubernetesIaas.removeKubernetesServices(clusterContext, context.getInstanceId());
 
             } else {
                 log.error(String.format("Cluster state transition is not valid: [cluster-id] %s " +
