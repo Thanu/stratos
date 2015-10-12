@@ -332,12 +332,10 @@ public class TopologyBuilder {
         Service service = topology.getService(memberContext.getCartridgeType());
         String clusterId = memberContext.getClusterId();
         Cluster cluster = service.getCluster(clusterId);
-        String applicationId = service.getCluster(memberContext.getClusterId()).getAppId();
         String memberId = memberContext.getMemberId();
         String clusterInstanceId = memberContext.getClusterInstanceId();
         String networkPartitionId = memberContext.getNetworkPartitionId();
         String partitionId = memberContext.getPartition().getId();
-        String clusterAlias = CloudControllerUtil.getAliasFromClusterId(memberContext.getClusterId());
         String lbClusterId = memberContext.getLbClusterId();
         long initTime = memberContext.getInitTime();
         if (cluster.memberExists(memberId)) {
@@ -353,24 +351,6 @@ public class TopologyBuilder {
             member.setInstanceId(memberContext.getInstanceId());
             cluster.addMember(member);
             TopologyManager.updateTopology(topology);
-
-            //member created time
-            Long timestamp = System.currentTimeMillis();
-            //publishing member status to DAS
-            MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
-                    createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
-
-            if (memStatusPublisher.isEnabled()) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Publishing Member Status to DAS");
-                }
-                memStatusPublisher.publish(timestamp, applicationId, memberContext.getClusterId(), clusterAlias,
-                        memberContext.getClusterInstanceId(), memberContext.getCartridgeType(),
-                        memberContext.getNetworkPartitionId(), memberContext.getPartition().getId(),
-                        memberContext.getMemberId(), MemberStatus.Created.toString());
-            } else {
-                log.warn("Member Status Publisher is not enabled");
-            }
 
         } finally {
             TopologyManager.releaseWriteLock();
@@ -394,8 +374,7 @@ public class TopologyBuilder {
                     String.format("Cluster %s does not exist for service %s", memberContext.getClusterId(),
                             memberContext.getCartridgeType()));
         }
-        String applicationId = service.getCluster(memberContext.getClusterId()).getAppId();
-        String clusterAlias = CloudControllerUtil.getAliasFromClusterId(memberContext.getClusterId());
+
         Member member = service.getCluster(memberContext.getClusterId()).
                 getMember(memberContext.getMemberId());
         if (member == null) {
@@ -434,38 +413,8 @@ public class TopologyBuilder {
                 log.info("Member status updated to initialized");
 
                 TopologyManager.updateTopology(topology);
-                //member intialized time
-                Long timestamp = System.currentTimeMillis();
                 TopologyEventPublisher.sendMemberInitializedEvent(memberContext);
-                //publishing member information and status to DAS
-                MemberInformationPublisher memInfoPublisher = CloudControllerPublisherFactory.
-                        createMemberInformationPublisher(StatisticsPublisherType.WSO2DAS);
 
-                MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
-                        createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
-
-                if (memInfoPublisher.isEnabled()) {
-                    if (log.isDebugEnabled()) {
-                        log.info("Publishing Member Information");
-                    }
-                    String scalingDecisionId = memberContext.getProperties()
-                            .getProperty(StratosConstants.SCALING_DECISION_ID).getValue();
-                    memInfoPublisher.publish(memberContext.getMemberId(), scalingDecisionId,
-                            memberContext.getInstanceMetadata());
-                } else {
-                    log.warn("Member Information Publisher is not enabled");
-                }
-                if (memStatusPublisher.isEnabled()) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Publishing Member Status to DAS");
-                    }
-                    memStatusPublisher.publish(timestamp, applicationId, memberContext.getClusterId(), clusterAlias,
-                            memberContext.getClusterInstanceId(), memberContext.getCartridgeType(),
-                            memberContext.getNetworkPartitionId(), memberContext.getPartition().getId(),
-                            memberContext.getMemberId(), MemberStatus.Initialized.toString());
-                } else {
-                    log.warn("Member Status Publisher is not enabled");
-                }
             }
         } finally
 
@@ -499,8 +448,6 @@ public class TopologyBuilder {
                                 instanceStartedEvent.getServiceName()));
             }
 
-            String applicationId = service.getCluster(instanceStartedEvent.getClusterId()).getAppId();
-            String clusterAlias = CloudControllerUtil.getAliasFromClusterId(instanceStartedEvent.getClusterId());
             Cluster cluster = service.getCluster(instanceStartedEvent.getClusterId());
             Member member = cluster.getMember(instanceStartedEvent.getMemberId());
             if (member == null) {
@@ -519,28 +466,9 @@ public class TopologyBuilder {
                     log.info("member started event adding status started");
 
                     TopologyManager.updateTopology(topology);
-                    //member started time
-                    Long timestamp = System.currentTimeMillis();
                     //memberStartedEvent.
                     TopologyEventPublisher.sendMemberStartedEvent(instanceStartedEvent);
-                    //publishing member status to DAS
-                    MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
-                            createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
 
-                    if (memStatusPublisher.isEnabled()) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Publishing Member Status to DAS");
-                        }
-                        memStatusPublisher
-                                .publish(timestamp, applicationId, instanceStartedEvent.getClusterId(), clusterAlias,
-                                        instanceStartedEvent.getClusterInstanceId(),
-                                        instanceStartedEvent.getServiceName(),
-                                        instanceStartedEvent.getNetworkPartitionId(),
-                                        instanceStartedEvent.getPartitionId(), instanceStartedEvent.getMemberId(),
-                                        MemberStatus.Starting.toString());
-                    } else {
-                        log.warn("Member Status Publisher is not enabled");
-                    }
                 }
             } finally {
                 TopologyManager.releaseWriteLock();
@@ -566,9 +494,6 @@ public class TopologyBuilder {
                     String.format("Cluster %s does not exist for service %s", instanceActivatedEvent.getClusterId(),
                             instanceActivatedEvent.getServiceName()));
         }
-
-        String applicationId = service.getCluster(instanceActivatedEvent.getClusterId()).getAppId();
-        String clusterAlias = CloudControllerUtil.getAliasFromClusterId(instanceActivatedEvent.getClusterId());
 
         Member member = cluster.getMember(instanceActivatedEvent.getMemberId());
         if (member == null) {
@@ -633,26 +558,7 @@ public class TopologyBuilder {
 
                 // Publish member activated event
                 TopologyEventPublisher.sendMemberActivatedEvent(memberActivatedEvent);
-                //member activated time
-                Long timestamp = System.currentTimeMillis();
-                // Publish member activated event
-                TopologyEventPublisher.sendMemberActivatedEvent(memberActivatedEvent);
 
-                //publishing member status to DAS
-                MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
-                        createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
-                if (memStatusPublisher.isEnabled()) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Publishing Member Status to DAS");
-                    }
-                    memStatusPublisher
-                            .publish(timestamp, applicationId, memberActivatedEvent.getClusterId(), clusterAlias,
-                                    memberActivatedEvent.getClusterInstanceId(), memberActivatedEvent.getServiceName(),
-                                    memberActivatedEvent.getNetworkPartitionId(), memberActivatedEvent.getPartitionId(),
-                                    memberActivatedEvent.getMemberId(), MemberStatus.Active.toString());
-                } else {
-                    log.warn("Member Status Publisher is not enabled");
-                }
             }
         } finally {
             TopologyManager.releaseWriteLock();
@@ -676,9 +582,6 @@ public class TopologyBuilder {
                     instanceReadyToShutdownEvent.getClusterId(), instanceReadyToShutdownEvent.getServiceName()));
         }
 
-        String applicationId = service.getCluster(instanceReadyToShutdownEvent.getClusterId()).getAppId();
-        String clusterAlias = CloudControllerUtil.getAliasFromClusterId(instanceReadyToShutdownEvent.getClusterId());
-
         Member member = cluster.getMember(instanceReadyToShutdownEvent.getMemberId());
         if (member == null) {
             throw new RuntimeException(
@@ -688,8 +591,7 @@ public class TopologyBuilder {
                 instanceReadyToShutdownEvent.getServiceName(), instanceReadyToShutdownEvent.getClusterId(),
                 instanceReadyToShutdownEvent.getClusterInstanceId(), instanceReadyToShutdownEvent.getMemberId(),
                 instanceReadyToShutdownEvent.getNetworkPartitionId(), instanceReadyToShutdownEvent.getPartitionId());
-        //member ReadyToShutDown state change time
-        Long timestamp = null;
+
         try {
             TopologyManager.acquireWriteLock();
 
@@ -701,28 +603,10 @@ public class TopologyBuilder {
             log.info("Member Ready to shut down event adding status started");
 
             TopologyManager.updateTopology(topology);
-            timestamp = System.currentTimeMillis();
         } finally {
             TopologyManager.releaseWriteLock();
         }
         TopologyEventPublisher.sendMemberReadyToShutdownEvent(memberReadyToShutdownEvent);
-        //publishing member status to DAS.
-        MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
-                createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
-        if (memStatusPublisher.isEnabled()) {
-            if (log.isDebugEnabled()) {
-                log.debug("Publishing Member Status to DAS");
-            }
-            memStatusPublisher
-                    .publish(timestamp, applicationId, instanceReadyToShutdownEvent.getClusterId(), clusterAlias,
-                            instanceReadyToShutdownEvent.getClusterInstanceId(),
-                            instanceReadyToShutdownEvent.getServiceName(),
-                            instanceReadyToShutdownEvent.getNetworkPartitionId(),
-                            instanceReadyToShutdownEvent.getPartitionId(), instanceReadyToShutdownEvent.getMemberId(),
-                            MemberStatus.ReadyToShutDown.toString());
-        } else {
-            log.warn("Member Status Publisher is not enabled");
-        }
         //termination of particular instance will be handled by autoscaler
     }
 
@@ -794,8 +678,6 @@ public class TopologyBuilder {
                     String.format("Cluster %s does not exist for service %s", clusterId, serviceName));
         }
 
-        String applicationId = service.getCluster(clusterId).getAppId();
-        String clusterAlias = CloudControllerUtil.getAliasFromClusterId(clusterId);
         Member member = cluster.getMember(memberId);
         if (member == null) {
             throw new RuntimeException((String.format("Member %s does not exist", memberId)));
@@ -803,8 +685,6 @@ public class TopologyBuilder {
 
         String clusterInstanceId = member.getClusterInstanceId();
 
-        //member terminated time
-        Long timestamp = null;
         try {
             TopologyManager.acquireWriteLock();
             properties = member.getProperties();
@@ -812,7 +692,6 @@ public class TopologyBuilder {
             TopologyManager.updateTopology(topology);
         } finally {
             TopologyManager.releaseWriteLock();
-            timestamp = System.currentTimeMillis();
         }
         /* @TODO leftover from grouping_poc*/
         String groupAlias = null;
@@ -820,19 +699,6 @@ public class TopologyBuilder {
                 .sendMemberTerminatedEvent(serviceName, clusterId, memberId, clusterInstanceId, networkPartitionId,
                         partitionId, properties, groupAlias);
 
-        //publishing member status to DAS.
-        MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
-                createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
-        if (memStatusPublisher.isEnabled()) {
-            if (log.isDebugEnabled()) {
-                log.debug("Publishing Member Status to DAS");
-            }
-            memStatusPublisher.publish(timestamp, applicationId, member.getClusterId(), clusterAlias,
-                    member.getClusterInstanceId(), member.getServiceName(), member.getNetworkPartitionId(),
-                    member.getPartitionId(), member.getMemberId(), MemberStatus.Terminated.toString());
-        } else {
-            log.warn("Member Status Publisher is not enabled");
-        }
     }
 
     public static void handleClusterActivatedEvent(
