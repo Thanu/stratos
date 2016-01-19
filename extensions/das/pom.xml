@@ -33,8 +33,10 @@
     <description>Apache Stratos DAS extension</description>
 
     <modules>
-        <module>modules/artifacts/metering-dashboard/capps</module>
-        <module>modules/artifacts/monitoring-dashboard/capps</module>
+        <module>modules/artifacts/mysql-db-artifacts/metering-dashboard/capps</module>
+        <module>modules/artifacts/oracle-db-artifacts/metering-dashboard/capps</module>
+        <module>modules/artifacts/mysql-db-artifacts/monitoring-dashboard/capps</module>
+        <module>modules/artifacts/oracle-db-artifacts/monitoring-dashboard/capps</module>
         <module>modules/stratos-das-extension</module>
         <module>modules/distribution</module>
     </modules>
