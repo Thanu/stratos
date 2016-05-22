@@ -68,9 +68,7 @@ dialect "mvel"
         eval(log.debug("[scaling] [network-partition] " + clusterInstanceContext.getNetworkPartitionId() + " [cluster] "
             + clusterId + " Algorithm name: " + algorithmName))
 
-	
-        rifThreshold : Float() from  loadThresholds.getRequestsInFlightThreshold()
-
+	    rifThreshold : Float() from  loadThresholds.getRequestsInFlightThreshold()
         rifAverage : Float() from  clusterInstanceContext.getAverageRequestsInFlight()
         rifGradient : Float() from  clusterInstanceContext.getRequestsInFlightGradient()
         rifSecondDerivative : Float() from  clusterInstanceContext.getRequestsInFlightSecondDerivative()
@@ -102,11 +100,8 @@ dialect "mvel"
             numberOfInstancesReuquiredBasedOnRif, numberOfInstancesReuquiredBasedOnMemoryConsumption, mcReset,
             numberOfInstancesReuquiredBasedOnLoadAverage, laReset)
 
-
-
         scaleUp : Boolean() from (activeInstancesCount < numberOfRequiredInstances)
         scaleDown : Boolean() from (activeInstancesCount > numberOfRequiredInstances || (numberOfRequiredInstances == 1 && activeInstancesCount == 1))
-
 
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF Resetted?: " + rifReset))
         eval(log.debug("[scaling] " + "[cluster] " + clusterId + " RIF predicted value: " + rifPredictedValue))
@@ -163,7 +158,6 @@ dialect "mvel"
                     boolean partitionsAvailable = true;
                     int count = 0;
                     String scalingReason = (numberOfRequiredInstances == numberOfInstancesReuquiredBasedOnRif)?"RIF":(numberOfRequiredInstances== numberOfInstancesReuquiredBasedOnMemoryConsumption)?"MC":"LA";
-
                     String scalingDecisionId = clusterId + "-" + UUID.randomUUID().toString();
                     long scalingTime = System.currentTimeMillis();
 
@@ -319,7 +313,3 @@ dialect "mvel"
         }
 
 end
-
-
-
-
