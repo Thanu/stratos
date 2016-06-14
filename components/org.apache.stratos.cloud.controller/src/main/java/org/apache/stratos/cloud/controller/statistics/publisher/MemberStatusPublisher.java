@@ -25,11 +25,7 @@ import org.wso2.carbon.databridge.commons.StreamDefinition;
 /**
  * Member Status Publisher Interface.
  */
-public abstract class MemberStatusPublisher extends ThriftStatisticsPublisher {
-
-    public MemberStatusPublisher(StreamDefinition streamDefinition, String thriftClientName) {
-        super(streamDefinition, thriftClientName);
-    }
+public abstract class MemberStatusPublisher {
 
     /**
      * Publishing member status.
@@ -48,4 +44,8 @@ public abstract class MemberStatusPublisher extends ThriftStatisticsPublisher {
     public abstract void publish(Long timestamp, String applicationId, String clusterId,
                                  String clusterAlias, String clusterInstanceId, String serviceName,
                                  String networkPartitionId, String partitionId, String memberId, String status);
+
+    public abstract void publishActiveCountsToAnalytics();
+
+    public abstract boolean isEnabled();
 }

@@ -102,7 +102,7 @@ public class ClusterMonitor extends Monitor {
     private boolean groupScalingEnabledSubtree;
     private String deploymentPolicyId;
     private ScalingDecisionPublisher scalingDecisionPublisher =
-            AutoscalerPublisherFactory.createScalingDecisionPublisher(StatisticsPublisherType.WSO2DAS);
+            AutoscalerPublisherFactory.createScalingDecisionPublisher();
 
     public ClusterMonitor(Cluster cluster, boolean hasScalingDependents, boolean groupScalingEnabledSubtree,
                           String deploymentPolicyId) {

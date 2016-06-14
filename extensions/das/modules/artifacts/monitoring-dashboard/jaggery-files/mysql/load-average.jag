@@ -22,73 +22,66 @@ include("monitoring-authentication.jag");
 
 (function () {
 
-    var TIME_INTERVAL_1 = '30 Min';
+    var TIME_INTERVAL_1 = '30 Minutes';
     var TIME_INTERVAL_2 = '1 Hour';
-    var TIME_INTERVAL_3 = '1 Day';
-    var TIME_INTERVAL_4 = '1 Week';
-    var TIME_INTERVAL_5 = '1 Month';
-    var TIME_INTERVAL_6 = '6 Month';
-    var TIME_INTERVAL_7 = '1 Year';
+    var TIME_INTERVAL_3 = '6 Hours';
+    var TIME_INTERVAL_4 = '1 Day';
+    var TIME_INTERVAL_5 = '1 Week';
+    var TIME_INTERVAL_6 = '1 Month';
+    var TIME_INTERVAL_7 = '6 Months';
+    var TIME_INTERVAL_8 = '1 Year';
     var ALL_MEMBERS = 'All Members';
 
-    var db = new Database("WSO2_ANALYTICS_EVENT_STORE_DB");
+    var db = new Database("WSO2_PPAAS_ANALYTICS_DB");
 
     try {
         var result;
-
         var timeInterval = request.getParameter("time");
-        var interval = 1800000;
-        var x_axis_interval;
-        var time_format;
+        var interval = 30 * 60 * 1000; //time interval in millisecond to filter data
+        var x_axis_interval; // x axis 1 unit interval in seconds
+
         if (timeInterval === TIME_INTERVAL_1) {
-            interval = 1800000;
+            interval = 30 * 60 * 1000;
             x_axis_interval = 60;
-            time_format = '%h:%i';
         } else if (timeInterval === TIME_INTERVAL_2) {
-            interval = 3600000;
-            x_axis_interval = 120;
-            time_format = '%h:%i';
+            interval = 2 * 30 * 60 * 1000;
+            x_axis_interval = 60;
         } else if (timeInterval === TIME_INTERVAL_3) {
-            interval = 86400000;
-            x_axis_interval = 2880;
-            time_format = '%Y:%m:%d %h:%i';
+            interval = 6 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 3 * 60;
         } else if (timeInterval === TIME_INTERVAL_4) {
-            interval = 604800000;
-            x_axis_interval = 20160;
-            time_format = '%Y:%m:%d %h:%i';
+            interval = 24 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 4 * 3 * 60;
         } else if (timeInterval === TIME_INTERVAL_5) {
-            interval = 2419200000;
-            x_axis_interval = 80640;
-            time_format = '%Y:%m:%d';
+            interval = 7 * 24 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 7 * 4 * 3 * 60;
         } else if (timeInterval === TIME_INTERVAL_6) {
-            interval = 2419200000*6;
-            x_axis_interval = 80640*6;
-            time_format = '%Y:%m:%d';
+            interval = 30 * 24 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 4 * 7 * 4 * 3 * 60;
         } else if (timeInterval === TIME_INTERVAL_7) {
-            interval = 2419200000*12;
-            x_axis_interval = 80640*12;
-            time_format = '%Y:%m:%d';
+            interval = 365 / 2 * 24 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 6 * 4 * 7 * 4 * 3 * 60;
+        } else if (timeInterval === TIME_INTERVAL_8) {
+            interval = 365 * 24 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 2 * 6 * 4 * 7 * 4 * 3 * 60;
         }
 
         var clusterId = request.getParameter("clusterId");
         var memberId = request.getParameter("memberId");
 
-       if (memberId == ALL_MEMBERS) {
-            result = db.query("SELECT FROM_UNIXTIME(CEILING( Time/('" + x_axis_interval + "'*1000)) *'" +
-                    x_axis_interval + "', '" + time_format + "') AS Time, AVG(Value) AS Value FROM " +
-                    "AVG_LOAD_AVERAGE_STATS WHERE ClusterId=? AND Time > ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000-'" +
-                    interval + "' ) AND Time <= ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000) GROUP BY FROM_UNIXTIME" +
-                    "(CEILING( Time/('" + x_axis_interval + "'*1000)) *'"+x_axis_interval+"', '%Y:%m:%d %h:%i'), " +
-                    "ClusterId", clusterId);
-       }else{
-            result = db.query("SELECT FROM_UNIXTIME(CEILING( Time/('" + x_axis_interval + "'*1000)) *'" +
-                    x_axis_interval + "', '" + time_format + "') AS Time, AVG(Value) AS Value FROM " +
-                    "M_AVG_LOAD_AVERAGE_STATS WHERE ClusterId=? AND MemberId=? AND Time > ROUND(UNIX_TIMESTAMP" +
-                    "(CURTIME(4)) * 1000-'" + interval + "' ) AND Time <= ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000) "
-                    + "GROUP BY FROM_UNIXTIME( CEILING( Time/('" + x_axis_interval + "'*1000)) " +
-                    "*'"+x_axis_interval+"', '%Y:%m:%d %h:%i'), ClusterId, MemberId", clusterId, memberId);
-       }
-       print(result);
+        if (memberId == ALL_MEMBERS) {
+            result = db.query("SELECT Time, AVG(Value) AS Value FROM AVERAGE_LOAD_AVERAGE_STATS WHERE ClusterId=? AND" +
+                    " Time > ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000-'" + interval + "' ) AND Time <= ROUND" +
+                    "(UNIX_TIMESTAMP(CURTIME(4)) * 1000) GROUP BY CEILING(Time/('" + x_axis_interval + "' * 1000)) " +
+                    "*'" + x_axis_interval + "', ClusterId ORDER BY Time", clusterId);
+        } else {
+            result = db.query("SELECT Time, AVG(Value) AS Value FROM MEMBER_AVERAGE_LOAD_AVERAGE_STATS WHERE " +
+                    "ClusterId=? AND MemberId=? AND Time > ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000-'" + interval + "'" +
+                    " ) AND Time <= ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000) GROUP BY CEILING(Time/('" +
+                    x_axis_interval + "' * 1000)) *'" + x_axis_interval + "', ClusterId, MemberId ORDER BY Time",
+                    clusterId, memberId);
+        }
+        print(result);
 
     }
     catch (e) {

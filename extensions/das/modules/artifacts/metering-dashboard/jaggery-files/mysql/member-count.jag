@@ -24,49 +24,46 @@ include('metering-authentication.jag');
 
     var TIME_INTERVAL_1 = '30 Min';
     var TIME_INTERVAL_2 = '1 Hour';
-    var TIME_INTERVAL_3 = '1 Day';
-    var TIME_INTERVAL_4 = '1 Week';
-    var TIME_INTERVAL_5 = '1 Month';
-    var TIME_INTERVAL_6 = '6 Month';
-    var TIME_INTERVAL_7 = '1 Year';
+    var TIME_INTERVAL_3 = '6 Hours';
+    var TIME_INTERVAL_4 = '1 Day';
+    var TIME_INTERVAL_5 = '1 Week';
+    var TIME_INTERVAL_6 = '1 Month';
+    var TIME_INTERVAL_7 = '6 Months';
+    var TIME_INTERVAL_8 = '1 Year';
     var ALL_CLUSTERS = 'All Clusters';
 
-    var db = new Database("WSO2_ANALYTICS_PROCESSED_DATA_STORE_DB");
+    var db = new Database("WSO2_PPAAS_ANALYTICS_DB");
 
     try {
         var result;
 
         var timeInterval = request.getParameter("time");
-        var interval = 1800000;
+        var interval = 30 * 60 * 1000; //time interval in millisecond to filter data
         if (timeInterval === TIME_INTERVAL_1) {
-            interval = 1800000;
+            interval = 30 * 60 * 1000;
         } else if (timeInterval === TIME_INTERVAL_2) {
-            interval = 3600000;
+            interval = 2 * 30 * 60 * 1000;
         } else if (timeInterval === TIME_INTERVAL_3) {
-            interval = 86400000;
+            interval = 6 * 2 * 30 * 60 * 1000;
         } else if (timeInterval === TIME_INTERVAL_4) {
-            interval = 604800000;
+            interval = 24 * 2 * 30 * 60 * 1000;
         } else if (timeInterval === TIME_INTERVAL_5) {
-            interval = 2419200000;
+            interval = 7 * 24 * 2 * 30 * 60 * 1000;
         } else if (timeInterval === TIME_INTERVAL_6) {
-            interval = 2419200000 * 6;
+            interval = 30 * 24 * 2 * 30 * 60 * 1000;
         } else if (timeInterval === TIME_INTERVAL_7) {
-            interval = 2419200000 * 12;
+            interval = 365 / 2 * 24 * 2 * 30 * 60 * 1000;
+        } else if (timeInterval === TIME_INTERVAL_8) {
+            interval = 365 * 24 * 2 * 30 * 60 * 1000;
         }
 
         var applicationId = request.getParameter("applicationId");
         var clusterId = request.getParameter("clusterId");
 
         if (clusterId == ALL_CLUSTERS) {
-            result = db.query("SELECT timestamp as Time, active_instances as ActiveInstances FROM " +
-                    "APP_ACTIVE_MEMBER_COUNT WHERE " + "APPLICATION_ID=? AND TIMESTAMP > " +
-                    "ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000-'" + interval + "' ) AND TIMESTAMP <= " +
-                    "ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)", applicationId);
+            result = db.query("SELECT timestamp as Time, active_instances as ActiveInstances FROM APPLICATION_ACTIVE_MEMBER_COUNT WHERE " + "APPLICATION_ID=? AND TIMESTAMP > ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000-'" + interval + "' ) AND TIMESTAMP <= ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000) ORDER BY timestamp", applicationId);
         } else {
-            result = db.query("SELECT timestamp as Time, active_instances as ActiveInstances FROM " +
-                    "CLUSTER_ACTIVE_MEMBER_COUNT WHERE " + "APPLICATION_ID=? AND CLUSTER_ALIAS=? AND TIMESTAMP > " +
-                    "ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000-'" + interval + "') AND TIMESTAMP <= " +
-                    "ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)", applicationId, clusterId);
+            result = db.query("SELECT timestamp as Time, active_instances as ActiveInstances FROM CLUSTER_ACTIVE_MEMBER_COUNT WHERE " + "APPLICATION_ID=? AND CLUSTER_ALIAS=? AND TIMESTAMP > ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000-'" + interval + "') AND TIMESTAMP <= ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000) ORDER BY timestamp", applicationId, clusterId);
         }
         print(result);
 

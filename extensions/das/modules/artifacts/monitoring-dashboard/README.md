@@ -15,12 +15,5 @@ Gadgets, SparkScripts and Dashboard artifacts.
 2. Create MySQL/Oracle database and tables using queries in
 `<Stratos-DAS-Distribution>/monitoring-dashboard/database-scripts/<db>/monitoring-script.sql` manually.
 
-3. Copy CEP  EventFormatter artifacts in `<Stratos-DAS-Distribution>/wso2cep-<version>/eventformatters/` to
-`<CEP-HOME>/repository/deployment/server/eventformatters/`.
-
-4. Copy CEP OutputEventAdapter artifact in `<Stratos-DAS-Distribution>/wso2cep-<version>/outputeventadaptors/` to
-`<CEP-HOME>/repository/deployment/server/outputeventadaptors/`  and update the tcp and ssl ports according to DAS server
- port offset.
-
-5. Add stratos-monitoring-service car file in `<Stratos-DAS-Distribution>/monitoring-dashboard/` to
+3. Add stratos-monitoring-service car file in `<Stratos-DAS-Distribution>/monitoring-dashboard/` to
 `<DAS-HOME>/repository/deployment/server/carbonapps/` to generate the monitoring dashboard.

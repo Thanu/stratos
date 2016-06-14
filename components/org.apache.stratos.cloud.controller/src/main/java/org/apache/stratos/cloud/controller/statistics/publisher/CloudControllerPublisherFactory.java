@@ -19,6 +19,7 @@
 
 package org.apache.stratos.cloud.controller.statistics.publisher;
 
+import org.apache.stratos.common.constants.StratosConstants;
 import org.apache.stratos.common.exception.InvalidStatisticsPublisherTypeException;
 import org.apache.stratos.common.statistics.publisher.StatisticsPublisherType;
 
@@ -29,28 +30,38 @@ public class CloudControllerPublisherFactory {
     /**
      * Create member information publisher
      *
-     * @param type StatisticsPublisherType
      * @return MemberInformationPublisher
      */
-    public static MemberInformationPublisher createMemberInformationPublisher(StatisticsPublisherType type) {
+    public static MemberInformationPublisher createMemberInformationPublisher() {
+        String typeValue = System.getProperty(StratosConstants.STATS_PUBLISHER_TYPE_KEY,
+                StatisticsPublisherType.JDBC.toString());
+        StatisticsPublisherType type = StatisticsPublisherType.getType(typeValue);
         if (type == StatisticsPublisherType.WSO2DAS) {
             return DASMemberInformationPublisher.getInstance();
+        } else if (type == StatisticsPublisherType.JDBC) {
+            return JDBCMemberInformationPublisher.getInstance();
         } else {
-            throw new InvalidStatisticsPublisherTypeException("Invalid statistics publisher type is used to create publisher.");
+            throw new InvalidStatisticsPublisherTypeException("Invalid statistics publisher type is used to create " +
+                    "publisher.");
         }
     }
 
     /**
      * Create member status publisher
      *
-     * @param type StatisticsPublisherType
      * @return MemberStatusPublisher
      */
-    public static MemberStatusPublisher createMemberStatusPublisher(StatisticsPublisherType type) {
+    public static MemberStatusPublisher createMemberStatusPublisher() {
+        String typeValue = System.getProperty(StratosConstants.STATS_PUBLISHER_TYPE_KEY,
+                StatisticsPublisherType.JDBC.toString());
+        StatisticsPublisherType type = StatisticsPublisherType.getType(typeValue);
         if (type == StatisticsPublisherType.WSO2DAS) {
             return DASMemberStatusPublisher.getInstance();
+        } else if (type == StatisticsPublisherType.JDBC) {
+            return JDBCMemberStatusPublisher.getInstance();
         } else {
-            throw new InvalidStatisticsPublisherTypeException("Invalid statistics publisher type is used to create publisher.");
+            throw new InvalidStatisticsPublisherTypeException("Invalid statistics publisher type is used to create " +
+                    "publisher.");
         }
     }
 }

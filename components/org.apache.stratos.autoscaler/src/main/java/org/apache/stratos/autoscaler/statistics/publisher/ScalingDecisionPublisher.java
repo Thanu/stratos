@@ -25,12 +25,7 @@ import org.wso2.carbon.databridge.commons.StreamDefinition;
 /**
  * Scaling Decision Publisher interface.
  */
-public abstract class ScalingDecisionPublisher extends ThriftStatisticsPublisher {
-
-    public ScalingDecisionPublisher(StreamDefinition streamDefinition, String thriftClientName) {
-        super(streamDefinition, thriftClientName);
-    }
-
+public abstract class ScalingDecisionPublisher {
     /**
      * Publishing scaling decision to DAS.
      *
@@ -60,4 +55,6 @@ public abstract class ScalingDecisionPublisher extends ThriftStatisticsPublisher
                                  int laPredicted, int laThreshold, int laRequiredInstance,
                                  int requiredInstanceCount, int activeInstanceCount, int additionalInstanceCount,
                                  String scalingReason);
+
+    public abstract boolean isEnabled();
 }

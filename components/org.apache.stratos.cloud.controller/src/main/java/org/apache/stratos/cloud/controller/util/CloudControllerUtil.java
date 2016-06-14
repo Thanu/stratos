@@ -18,24 +18,13 @@
  */
 package org.apache.stratos.cloud.controller.util;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-
+import com.google.common.net.InetAddresses;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.stratos.cloud.controller.config.CloudControllerConfig;
 import org.apache.stratos.cloud.controller.context.CloudControllerContext;
-import org.apache.stratos.cloud.controller.domain.Cartridge;
-import org.apache.stratos.cloud.controller.domain.IaasConfig;
-import org.apache.stratos.cloud.controller.domain.IaasProvider;
-import org.apache.stratos.cloud.controller.domain.NetworkInterface;
-import org.apache.stratos.cloud.controller.domain.NetworkInterfaces;
-import org.apache.stratos.cloud.controller.domain.Partition;
+import org.apache.stratos.cloud.controller.domain.*;
 import org.apache.stratos.cloud.controller.domain.kubernetes.KubernetesCluster;
 import org.apache.stratos.cloud.controller.domain.kubernetes.KubernetesHost;
 import org.apache.stratos.cloud.controller.domain.kubernetes.KubernetesMaster;
@@ -48,6 +37,13 @@ import org.apache.stratos.cloud.controller.registry.RegistryManager;
 import org.apache.stratos.common.Property;
 import org.apache.stratos.common.domain.LoadBalancingIPType;
 import org.apache.stratos.messaging.domain.topology.Topology;
+
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 
 public class CloudControllerUtil {
     private static final Log log = LogFactory.getLog(CloudControllerUtil.class);
@@ -262,6 +258,16 @@ public class CloudControllerUtil {
             throw new InvalidKubernetesHostException("Kubernetes host private IP address has not been set: " +
                     "[host-id] " + kubernetesHost.getHostId());
         }
+        if (!InetAddresses.isInetAddress(kubernetesHost.getPrivateIPAddress())) {
+            throw new InvalidKubernetesHostException(
+                    "Kubernetes host private IP address is invalid: " + kubernetesHost.getPrivateIPAddress());
+        }
+        if (StringUtils.isNotBlank(kubernetesHost.getPublicIPAddress())) {
+            if (!InetAddresses.isInetAddress(kubernetesHost.getPublicIPAddress())) {
+                throw new InvalidKubernetesHostException(
+                        "Kubernetes host public IP address is invalid: " + kubernetesHost.getPrivateIPAddress());
+            }
+        }
     }
 
     public static void validateKubernetesMaster(KubernetesMaster kubernetesMaster)
@@ -285,7 +291,7 @@ public class CloudControllerUtil {
         return StringUtils.substringBefore(StringUtils.substringAfter(clusterId, "."), ".");
     }
 
-    public static IaasProvider getUpdatedIaasProviderInstance (Cartridge cartridge, Partition partition)
+    public static IaasProvider getUpdatedIaasProviderInstance(Cartridge cartridge, Partition partition)
             throws InvalidIaasProviderException {
 
         IaasConfig cartridgeIaasConfig = null;
@@ -306,7 +312,7 @@ public class CloudControllerUtil {
             throw new InvalidIaasProviderException(errorMsg);
         }
 
-        IaasProvider iaasProvider = null;
+        IaasProvider iaasProvider;
         // update with new cloud-controller.xml and cartridge definition changes
         if (cartridgeIaasConfig == null) {
             iaasProvider = ccIaasProvider;
@@ -333,8 +339,8 @@ public class CloudControllerUtil {
         return iaasProvider;
     }
 
-    private static IaasProvider createUpdatedIaasProviderObject (IaasConfig cartridgeIaasConfig,
-                                                                 IaasProvider ccIaasProvider)
+    private static IaasProvider createUpdatedIaasProviderObject(IaasConfig cartridgeIaasConfig,
+                                                                IaasProvider ccIaasProvider)
             throws InvalidIaasProviderException {
 
         // create a deep copy of the IaaSProvider, not a reference
@@ -395,7 +401,8 @@ public class CloudControllerUtil {
     }
 
     private static String selectAttribute(String attributeName, String attributeDefinedInCartridge,
-                                          String attributeDefinedInCC, boolean logInfo) throws InvalidIaasProviderException {
+                                          String attributeDefinedInCC, boolean logInfo) throws
+            InvalidIaasProviderException {
 
         if (attributeDefinedInCartridge != null) {
             if (log.isDebugEnabled() && logInfo) {
@@ -417,8 +424,7 @@ public class CloudControllerUtil {
         }
     }
 
-    private static void logNetworkInterfaces (String iaasProviderType, NetworkInterface[] networkInterfaces) {
-
+    private static void logNetworkInterfaces(String iaasProviderType, NetworkInterface[] networkInterfaces) {
         if (networkInterfaces != null) {
             log.debug("All Network interfaces in IaasProvider object for type: " +
                     iaasProviderType);
@@ -430,7 +436,6 @@ public class CloudControllerUtil {
 
     private static void logProperties(String iaasProviderType, Map<String, String> properties,
                                       String cartridgeType, String partitionId) {
-
         if (properties != null) {
             log.debug("Properties defined in IaasProvider object for type: " +
                     iaasProviderType + ", cartridge type: " + cartridgeType + ", partition: " +

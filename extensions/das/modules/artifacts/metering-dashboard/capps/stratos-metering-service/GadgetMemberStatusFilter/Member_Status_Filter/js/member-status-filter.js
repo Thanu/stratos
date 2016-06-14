@@ -18,14 +18,12 @@
  * under the License.
  *
  */
-
 var applicationId;
 var clusterId;
-var time = '30 Min';
+var time = '30 Minutes';
 $(document).ready(function () {
-    loadApplication();
-
     setTimeout(function () {
+        loadApplication();
         if (applicationId != null) {
             loadCluster(applicationId);
             $('#' + window.frameElement.id).ready(function () {
@@ -44,7 +42,6 @@ $(document).ready(function () {
         }
     }, 3000);
 
-
 });
 
 gadgets.HubSettings.onConnect = function () {
@@ -59,6 +56,7 @@ gadgets.HubSettings.onConnect = function () {
 $('body').on('change', '#application-filter', function () {
     var e = document.getElementById("application-filter");
     applicationId = e.options[e.selectedIndex].value;
+    clusterId = 'All Clusters';
     loadCluster(applicationId);
     publish(time);
 });
@@ -90,6 +88,11 @@ function loadApplication() {
                 elem.appendChild(option);
             }
             document.getElementById('application').appendChild(elem);
+            if (applicationIds.length > 0) {
+                elem.selectedIndex = 1;
+                loadCluster(elem.options[elem.selectedIndex].value);
+                publish(time);
+            }
         }
     });
 }
@@ -124,15 +127,14 @@ function loadCluster(application) {
             document.getElementById('cluster').appendChild(clusterList);
         }
     });
-    if (clusterId == null) {
-        var e = document.getElementById("cluster-filter");
-        clusterId = e.options[e.selectedIndex].value;
-    }
-
 }
 
 function publish(timeInterval) {
     time = timeInterval;
+    var elem = document.getElementById('application-filter');
+    applicationId = elem.options[elem.selectedIndex].value;
+    elem = document.getElementById('cluster-filter');
+    clusterId = elem.options[elem.selectedIndex].value;
     var data = {applicationId: applicationId, clusterId: clusterId, timeInterval: time};
     gadgets.Hub.publish("member-status-filter", data);
     console.log("Publishing filter values: " + JSON.stringify(data));

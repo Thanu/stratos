@@ -162,22 +162,10 @@ dialect "mvel"
 
                     boolean partitionsAvailable = true;
                     int count = 0;
-
                     String scalingReason = (numberOfRequiredInstances == numberOfInstancesReuquiredBasedOnRif)?"RIF":(numberOfRequiredInstances== numberOfInstancesReuquiredBasedOnMemoryConsumption)?"MC":"LA";
 
                     String scalingDecisionId = clusterId + "-" + UUID.randomUUID().toString();
                     long scalingTime = System.currentTimeMillis();
-
-                    if (scalingDecisionPublisher.isEnabled()) {
-                        log.debug("Publishing scaling decision to DAS");
-                        scalingDecisionPublisher.publish(scalingTime, scalingDecisionId, clusterId,
-                                            minInstancesCount, maxInstancesCount,
-                                            rifPredictedValue, rifThreshold, numberOfInstancesReuquiredBasedOnRif,
-                                            mcPredictedValue, mcThreshold, numberOfInstancesReuquiredBasedOnMemoryConsumption,
-                                            laPredictedValue, laThreshold, numberOfInstancesReuquiredBasedOnLoadAverage,
-                                            numberOfRequiredInstances, activeInstancesCount,
-                                            additionalInstances, scalingReason);
-                    }
 
                     while(count != additionalInstances && partitionsAvailable){
 
@@ -198,6 +186,15 @@ dialect "mvel"
 
                             log.debug("[scale-up] " + " [partition] " + partitionContext.getPartitionId() + " [cluster] " + clusterId );
                             delegator.delegateSpawn(partitionContext, clusterId, clusterInstanceContext.getId(), scalingDecisionId);
+                            if (scalingDecisionPublisher.isEnabled()) {
+                                log.info("Publishing analytics data for scaling decision event...");
+                                scalingDecisionPublisher.publish(scalingTime, scalingDecisionId, clusterId,
+                                minInstancesCount, maxInstancesCount, rifPredictedValue, rifThreshold,
+                                numberOfInstancesReuquiredBasedOnRif, mcPredictedValue, mcThreshold,
+                                numberOfInstancesReuquiredBasedOnMemoryConsumption, laPredictedValue, laThreshold,
+                                numberOfInstancesReuquiredBasedOnLoadAverage, numberOfRequiredInstances,
+                                activeInstancesCount, additionalInstances - count, scalingReason);
+                            }
                             count++;
                         } else {
 
@@ -322,7 +319,3 @@ dialect "mvel"
         }
 
 end
-
-
-
-

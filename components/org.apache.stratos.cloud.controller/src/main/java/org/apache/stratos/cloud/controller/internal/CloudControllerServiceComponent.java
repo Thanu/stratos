@@ -31,13 +31,19 @@ import org.apache.stratos.cloud.controller.messaging.receiver.application.Applic
 import org.apache.stratos.cloud.controller.messaging.receiver.cluster.status.ClusterStatusTopicReceiver;
 import org.apache.stratos.cloud.controller.messaging.receiver.initializer.InitializerTopicReceiver;
 import org.apache.stratos.cloud.controller.messaging.receiver.instance.status.InstanceStatusTopicReceiver;
+import org.apache.stratos.cloud.controller.messaging.topology.TopologyHolder;
 import org.apache.stratos.cloud.controller.services.CloudControllerService;
 import org.apache.stratos.cloud.controller.services.impl.CloudControllerServiceImpl;
+import org.apache.stratos.cloud.controller.statistics.publisher.CloudControllerPublisherFactory;
+import org.apache.stratos.cloud.controller.statistics.publisher.MemberStatusPublisher;
+import org.apache.stratos.cloud.controller.util.CloudControllerConstants;
 import org.apache.stratos.common.Component;
+import org.apache.stratos.common.db.AnalyticsJDBCManager;
 import org.apache.stratos.common.services.ComponentStartUpSynchronizer;
 import org.apache.stratos.common.services.DistributedObjectProvider;
 import org.apache.stratos.common.threading.StratosThreadPool;
 import org.apache.stratos.messaging.broker.publish.EventPublisherPool;
+import org.apache.stratos.messaging.message.receiver.topology.TopologyManager;
 import org.apache.stratos.messaging.util.MessagingUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
@@ -95,8 +101,7 @@ public class CloudControllerServiceComponent {
                     .getScheduledExecutorService(SCHEDULER_THREAD_POOL_ID, SCHEDULER_THREAD_POOL_SIZE);
 
             Runnable cloudControllerActivator = new Runnable() {
-                @Override
-                public void run() {
+                @Override public void run() {
                     try {
                         ComponentStartUpSynchronizer componentStartUpSynchronizer = ServiceReferenceHolder.getInstance()
                                 .getComponentStartUpSynchronizer();
@@ -108,8 +113,7 @@ public class CloudControllerServiceComponent {
 
                         if (CloudControllerContext.getInstance().isClustered()) {
                             Thread coordinatorElectorThread = new Thread() {
-                                @Override
-                                public void run() {
+                                @Override public void run() {
                                     ServiceReferenceHolder.getInstance().getHazelcastInstance()
                                             .getLock(CLOUD_CONTROLLER_COORDINATOR_LOCK).lock();
 
@@ -132,6 +136,11 @@ public class CloudControllerServiceComponent {
                                 .waitForAxisServiceActivation(Component.CloudController, "CloudControllerService");
                         componentStartUpSynchronizer.setComponentStatus(Component.CloudController, true);
                         log.info("Cloud controller service component activated");
+
+                        // scheduled job to publish active member count to analytics if
+                        if (AnalyticsJDBCManager.isJDBCAnalyticsPublisherEnabled()) {
+                            scheduleActiveMemberCountPublisherTask();
+                        }
                     } catch (Exception e) {
                         log.error("Could not activate cloud controller service component", e);
                     }
@@ -142,6 +151,40 @@ public class CloudControllerServiceComponent {
         } catch (Exception e) {
             log.error("Could not activate cloud controller service component", e);
         }
+    }
+
+    private void scheduleActiveMemberCountPublisherTask() {
+        Runnable analyticsActiveCountPublisher = new Runnable() {
+            @Override public void run() {
+                if (log.isInfoEnabled()) {
+                    log.info("Running scheduled active member count publisher task...");
+                }
+                if (!TopologyManager.isInitialized()) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        log.error(e);
+                    }
+                }
+                TopologyHolder.acquireReadLock();
+                try {
+                    MemberStatusPublisher memberStatusPublisher = CloudControllerPublisherFactory
+                            .createMemberStatusPublisher();
+                    if (log.isInfoEnabled()) {
+                        log.info("Publishing analytics data for member active counts...");
+                    }
+                    memberStatusPublisher.publishActiveCountsToAnalytics();
+                } catch (Exception e) {
+                    log.error("Failed to execute scheduled active member count publisher task.", e);
+                } finally {
+                    TopologyHolder.releaseReadLock();
+                }
+            }
+        };
+
+        int activeCountPublisherInterval = Integer
+                .parseInt(System.getProperty(CloudControllerConstants.ANALYTICS_ACTIVE_COUNT_PUBLISHER_INTERVAL, "24"));
+        scheduler.scheduleAtFixedRate(analyticsActiveCountPublisher, 0, activeCountPublisherInterval, TimeUnit.HOURS);
     }
 
     private void executeCoordinatorTasks() {

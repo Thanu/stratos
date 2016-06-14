@@ -20,17 +20,11 @@
 package org.apache.stratos.cloud.controller.statistics.publisher;
 
 import org.apache.stratos.cloud.controller.domain.InstanceMetadata;
-import org.apache.stratos.common.statistics.publisher.ThriftStatisticsPublisher;
-import org.wso2.carbon.databridge.commons.StreamDefinition;
 
 /**
  * Member Information Publisher interface.
  */
-public abstract class MemberInformationPublisher extends ThriftStatisticsPublisher {
-
-    public MemberInformationPublisher(StreamDefinition streamDefinition, String thriftClientName) {
-        super(streamDefinition, thriftClientName);
-    }
+public abstract class MemberInformationPublisher {
 
     /**
      * Publishing member information.
@@ -41,4 +35,5 @@ public abstract class MemberInformationPublisher extends ThriftStatisticsPublish
      */
     public abstract void publish(String memberId, String scalingDecisionId, InstanceMetadata metadata);
 
+    public abstract boolean isEnabled();
 }

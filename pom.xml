@@ -1038,11 +1038,6 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.stratos</groupId>
-                <artifactId>org.apache.stratos.das.extension</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.stratos</groupId>
                 <artifactId>org.apache.stratos.common</artifactId>
                 <version>${project.version}</version>
             </dependency>

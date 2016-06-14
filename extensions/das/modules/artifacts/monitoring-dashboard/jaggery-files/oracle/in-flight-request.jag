@@ -24,56 +24,54 @@ include("monitoring-authentication.jag");
 
     var TIME_INTERVAL_1 = '30 Min';
     var TIME_INTERVAL_2 = '1 Hour';
-    var TIME_INTERVAL_3 = '1 Day';
-    var TIME_INTERVAL_4 = '1 Week';
-    var TIME_INTERVAL_5 = '1 Month';
-    var TIME_INTERVAL_6 = '6 Month';
-    var TIME_INTERVAL_7 = '1 Year';
+    var TIME_INTERVAL_3 = '6 Hours';
+    var TIME_INTERVAL_4 = '1 Day';
+    var TIME_INTERVAL_5 = '1 Week';
+    var TIME_INTERVAL_6 = '1 Month';
+    var TIME_INTERVAL_7 = '6 Months';
+    var TIME_INTERVAL_8 = '1 Year';
 
-    var db = new Database("WSO2_ANALYTICS_EVENT_STORE_DB");
+    var db = new Database("WSO2_PPAAS_ANALYTICS_DB");
 
     try {
         var result;
 
         var timeInterval = request.getParameter("time");
-        var interval = 1800;
-        var x_axis_interval;
-        var time_format;
+        var interval = 30 * 60 * 1000; //time interval in millisecond to filter data
+        var x_axis_interval; // x axis 1 unit interval in seconds
+
         if (timeInterval === TIME_INTERVAL_1) {
-            interval = 1800;
+            interval = 30 * 60 * 1000;
             x_axis_interval = 60;
-            time_format = 'hh24:mi';
         } else if (timeInterval === TIME_INTERVAL_2) {
-            interval = 3600;
-            x_axis_interval = 120;
-            time_format = 'hh24:mi';
+            interval = 2 * 30 * 60 * 1000;
+            x_axis_interval = 60;
         } else if (timeInterval === TIME_INTERVAL_3) {
-            interval = 86400;
-            x_axis_interval = 2880;
-            time_format = 'yyyy-mm-dd hh24:mi';
+            interval = 6 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 3 * 60;
         } else if (timeInterval === TIME_INTERVAL_4) {
-            interval = 604800;
-            x_axis_interval = 20160;
-            time_format = 'yyyy-mm-dd hh24:mi';
+            interval = 24 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 4 * 3 * 60;
         } else if (timeInterval === TIME_INTERVAL_5) {
-            interval = 2419200;
-            x_axis_interval = 80640;
-            time_format = 'yyyy-mm-dd';
+            interval = 7 * 24 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 7 * 4 * 3 * 60;
         } else if (timeInterval === TIME_INTERVAL_6) {
-            interval = 2419200 * 6;
-            x_axis_interval = 80640 * 6;
-            time_format = 'yyyy-mm-dd';
+            interval = 30 * 24 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 4 * 7 * 4 * 3 * 60;
         } else if (timeInterval === TIME_INTERVAL_7) {
-            interval = 2419200*12;
-            x_axis_interval = 80640*12;
-            time_format = 'yyyy-mm-dd';
+            interval = 365 / 2 * 24 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 6 * 4 * 7 * 4 * 3 * 60;
+        } else if (timeInterval === TIME_INTERVAL_8) {
+            interval = 365 * 24 * 2 * 30 * 60 * 1000;
+            x_axis_interval = 2 * 6 * 4 * 7 * 4 * 3 * 60;
         }
 
         var clusterId = request.getParameter("clusterId");
-        result = db.query("SELECT TO_CHAR((TIMESTAMP '1970-01-01 00:00:00' AT TIME ZONE 'UTC' + NUMTODSINTERVAL(CEIL" +
-                "(Time/(" + x_axis_interval + " * 1000)) * " + x_axis_interval + ", 'second')) AT LOCAL, '" +
-                time_format + "') \"Time\", AVG(Count) AS \"Count\" FROM AVG_IN_FLIGHT_REQUESTS WHERE ClusterId=? AND" +
-                " TO_CHAR((TIMESTAMP '1970-01-01 00:00:00' AT TIME ZONE 'UTC' + NUMTODSINTERVAL(Time/1000,'second')) " +
+        result = db.query("SELECT Time, AVG(Count) AS Count FROM AVERAGE_IN_FLIGHT_REQUESTS WHERE ClusterId=? AND " +
+                "Time > ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000-'" + interval + "' ) AND Time <= ROUND(UNIX_TIMESTAMP" +
+                "(CURTIME(4)) * 1000) GROUP BY CEILING( Time/('" + x_axis_interval + "')) *'" + x_axis_interval + "'," +
+                " ClusterId ORDER BY Time", clusterId);
+        result = db.query("SELECT Time \"Time\", AVG(Count) AS \"Count\" FROM AVG_IN_FLIGHT_REQUESTS WHERE ClusterId=? AND TO_CHAR((TIMESTAMP '1970-01-01 00:00:00' AT TIME ZONE 'UTC' + NUMTODSINTERVAL(Time/1000,'second')) " +
                 "AT LOCAL, 'yyyy-mm-dd hh24:mi') BETWEEN TO_CHAR(LOCALTIMESTAMP - NUMTODSINTERVAL(" + interval + ", " +
                 "'second'),'yyyy-mm-dd hh24:mi') AND TO_CHAR(LOCALTIMESTAMP,'yyyy-mm-dd hh24:mi') GROUP BY TO_CHAR(" +
                 "(TIMESTAMP '1970-01-01 00:00:00' AT TIME ZONE 'UTC' + NUMTODSINTERVAL(CEIL(Time/(" + x_axis_interval

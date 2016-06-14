@@ -20,7 +20,7 @@
  */
 var type, columns, maxUpdateValue;
 
-var REFRESH_INTERVAL = 300000;
+var REFRESH_INTERVAL = 1800000; //Gadget will be refreshed every 30 Minutes
 var dataLoaded = true;
 
 var applicationId = '';

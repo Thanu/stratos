@@ -162,9 +162,6 @@ public final class CloudControllerConstants {
     public static final String TIMESTAMP_COL = "timestamp";
     public static final String SCALING_DECISION_ID_COL = "scaling_decision_id";
 
-    public static final String STATS_PUBLISHER_THREAD_POOL_ID = "cloud.controller.stats.publisher.thread.pool";
-    public static final int STATS_PUBLISHER_THREAD_POOL_SIZE = 10;
-
     /**
      * Properties
      */
@@ -349,4 +346,9 @@ public final class CloudControllerConstants {
     public static final String IAAS_TYPE_EC2 = "ec2";
     public static final String INSTANCE_CTXT_EC2_REGION = "EC2_REGION";
     public static final String INSTANCE_CTXT_EC2_AVAILABILITY_ZONE = "EC2_AVAILABILITY_ZONE";
+
+    /**
+     * Analytics
+     */
+    public static final String ANALYTICS_ACTIVE_COUNT_PUBLISHER_INTERVAL = "analytics.active.count.publisher.interval";
 }

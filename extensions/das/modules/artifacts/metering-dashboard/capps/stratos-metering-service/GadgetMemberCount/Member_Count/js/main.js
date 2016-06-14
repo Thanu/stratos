@@ -20,9 +20,9 @@
  */
 var type, columns, maxUpdateValue;
 
-var REFRESH_INTERVAL = 300000;
+var REFRESH_INTERVAL = 1800000; //Gadget will be refreshed every 30 Minutes
 var dataLoaded = true;
-var timeInterval = '30 Min';
+var timeInterval = '30 Minutes';
 var applicationId = '';
 var clusterId = '';
 
@@ -121,11 +121,7 @@ function makeRows(data) {
     var rows = [];
     for (var i = 0; i < data.length; i++) {
         var record = data[i];
-        var format = d3.time.format("%Y-%m-%d %H:%M:%S");
         var row = columns.map(function (column) {
-            if (column.COLUMN_NAME == 'Time') {
-                 record[column.COLUMN_NAME]=format(new Date(parseInt(record[column.COLUMN_NAME])));
-            }
             return record[column.COLUMN_NAME];
         });
         rows.push(row);
@@ -138,6 +134,7 @@ function drawChart(data) {
     if (dataTable.data.length != 0) {
         gadgetConfig.chartConfig.width = $("#placeholder").width();
         gadgetConfig.chartConfig.height = $("#placeholder").height() - 65;
+        gadgetConfig.chartConfig.timeInterval = timeInterval;
         var chartType = gadgetConfig.chartConfig.chartType;
         var xAxis = gadgetConfig.chartConfig.xAxis;
         var chart;

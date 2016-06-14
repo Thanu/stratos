@@ -91,8 +91,8 @@ public class StratosConstants {
 
     // metering constants
     public static final String THROTTLING_ALL_ACTION = "all_actions";
-    public static final String THROTTLING_IN_DATA_ACTION = "in_data_action"; //this covers registry capacity +
-    // registry bandwidth
+    //this covers registry capacity registry bandwidth
+    public static final String THROTTLING_IN_DATA_ACTION = "in_data_action";
     public static final String THROTTLING_OUT_DATA_ACTION = "out_data_action"; //this covers registry bandwidth
     public static final String THROTTLING_ADD_USER_ACTION = "add_user_action";
     public static final String THROTTLING_SERVICE_IN_BANDWIDTH_ACTION = "service_in_bandwith_action";
@@ -114,6 +114,8 @@ public class StratosConstants {
 
     // * as a Service impl related constants
     public static final String ORIGINATED_SERVICE = "originatedService";
+
+    public static final String STATS_PUBLISHER_TYPE_KEY = "stats.publisher.type";
 
     // Configuration file name
     public static final String STRATOS_CONF_FILE = "stratos.xml";
@@ -242,5 +244,10 @@ public class StratosConstants {
 
     public static final String NOT_DEFINED = "not-defined";
     public static final String CLUSTER_INSTANCE_ID = "cluster.instance.id";
+
+    // Analytics
+    public static final String ANALYTICS_DB_JNDI_NAME = "jdbc/AnalyticsDB";
+    public static final String ANALYTICS_DB_JNDI_NAME_KEY = "analytics.datasource.jndi.name";
+    public static final String ANALYTICS_LOGGER_NAME = "ANALYTICS_LOG";
 }
 

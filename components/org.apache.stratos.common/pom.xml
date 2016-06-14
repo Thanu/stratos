@@ -131,6 +131,8 @@
                         <Import-Package>
                             org.wso2.carbon.registry.core.*;version="${carbon.kernel.registry.imp.pkg.version.range}",
                             org.wso2.carbon.user.core.*,
+                            javax.sql.*,
+                            javax.naming.*,
                             org.wso2.securevault.*;version="0.0.0",
 
                             org.apache.commons.lang.*;version="${commons.lang.imp.pkg.version.range}",

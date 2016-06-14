@@ -73,16 +73,6 @@ dialect "mvel"
         long scalingTime = System.currentTimeMillis();
         String scalingReason = "MIN";
 
-        if (scalingDecisionPublisher.isEnabled()) {
-        log.debug("Publishing scaling decision to DAS");
-        scalingDecisionPublisher.publish(scalingTime, scalingDecisionId, clusterId,
-                                 clusterInstanceContext.getMinInstanceCount(),
-                                 clusterInstanceContext.getMaxInstanceCount(),
-                                 0, 0, 0, 0, 0, 0,0, 0, 0,
-                                 clusterInstanceContext.getMinInstanceCount(), 0,
-                                 additionalInstances, scalingReason);
-        }
-
         while(count != additionalInstances && partitionsAvailable){
 
             ClusterLevelPartitionContext partitionContext =  (ClusterLevelPartitionContext)partitionAlgorithm.getNextScaleUpPartitionContext(clusterInstanceContext.getPartitionCtxtsAsAnArray());
@@ -92,6 +82,12 @@ dialect "mvel"
                 log.info("[min-check] Partition available, hence trying to spawn an instance to fulfil minimum count!" + " [cluster] " + clusterId);
                 log.debug("[min-check] " + " [partition] " + partitionContext.getPartitionId() + " [cluster] " + clusterId);
                 delegator.delegateSpawn(partitionContext, clusterId, clusterInstanceContext.getId(), scalingDecisionId);
+                if (scalingDecisionPublisher.isEnabled()) {
+                    log.info("Publishing analytics data for scaling decision event...");
+                    scalingDecisionPublisher.publish(scalingTime, scalingDecisionId, clusterId,
+                    clusterInstanceContext.getMinInstanceCount(), clusterInstanceContext.getMaxInstanceCount(), 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, clusterInstanceContext.getMinInstanceCount(), clusterInstanceContext.getActiveMemberCount(), additionalInstances - count, scalingReason);
+                }
                 count++;
             } else {
                 log.warn("[min-check] Partition is not available to fulfil minimum count!" + " [cluster] " + clusterId);

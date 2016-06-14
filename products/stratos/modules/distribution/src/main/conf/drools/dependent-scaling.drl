@@ -81,15 +81,6 @@ dialect "mvel"
                 long scalingTime = System.currentTimeMillis();
                 String scalingReason = "DEPENDENCY";
 
-                if (scalingDecisionPublisher.isEnabled()) {
-                    log.debug("Publishing scaling decision to DAS");
-                    scalingDecisionPublisher.publish(scalingTime, scalingDecisionId, clusterId,
-                                             clusterInstanceContext.getMinInstanceCount(), clusterMaxMembers,
-                                             0, 0, 0, 0, 0, 0,0, 0, 0,
-                                             additionalInstances + nonTerminatedMembers,
-                                             0, additionalInstances, scalingReason);
-                }
-
                 while(count != additionalInstances  && partitionsAvailable) {
 
                     ClusterLevelPartitionContext partitionContext =  (ClusterLevelPartitionContext)partitionAlgorithm.getNextScaleUpPartitionContext(clusterInstanceContext.getPartitionCtxtsAsAnArray());
@@ -98,6 +89,12 @@ dialect "mvel"
                         log.info("[dependency-scale] [scale-up] Partition available, hence trying to spawn an instance to scale up!" );
                         log.debug("[dependency-scale] [scale-up] " + " [partition] " + partitionContext.getPartitionId() + " [cluster] " + clusterId );
                         delegator.delegateSpawn(partitionContext, clusterId, clusterInstanceContext.getId(), scalingDecisionId);
+                        if (scalingDecisionPublisher.isEnabled()) {
+                            log.info("Publishing analytics data for scaling decision event...");
+                            scalingDecisionPublisher.publish(scalingTime, scalingDecisionId, clusterId,
+                            clusterInstanceContext.getMinInstanceCount(), clusterMaxMembers, 0, 0, 0, 0, 0, 0, 0, 0,
+                            0, additionalInstances + nonTerminatedMembers, 0, additionalInstances - count, scalingReason);
+                        }
                         count++;
                     } else {
                         partitionsAvailable = false;
@@ -187,7 +184,3 @@ dialect "mvel"
         }
 
 end
-
-
-
-

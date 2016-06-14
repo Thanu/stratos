@@ -24,7 +24,7 @@ include('metering-authentication.jag');
 
     var ALL_CLUSTERS = 'All Clusters';
 
-    var db = new Database("WSO2_ANALYTICS_PROCESSED_DATA_STORE_DB");
+    var db = new Database("WSO2_PPAAS_ANALYTICS_DB");
 
     try {
         var result;
@@ -32,11 +32,9 @@ include('metering-authentication.jag');
         var clusterId = request.getParameter("clusterId");
 
         if (clusterId == ALL_CLUSTERS) {
-            result = db.query("SELECT * FROM MEMBER_INFORMATION WHERE MemberId IN (SELECT DISTINCT MemberId FROM " +
-                    "MEMBER_STATUS WHERE ApplicationId= ?)", applicationId);
+            result = db.query("SELECT * FROM MEMBER_INFORMATION WHERE MemberId IN (SELECT DISTINCT MemberId FROM MEMBER_STATUS WHERE ApplicationId= ?) ORDER BY MemberId", applicationId);
         } else {
-            result = db.query("SELECT * FROM MEMBER_INFORMATION WHERE MemberId IN (SELECT DISTINCT MemberId FROM " +
-                    "MEMBER_STATUS WHERE ApplicationId= ? AND ClusterAlias= ?)", applicationId, clusterId);
+            result = db.query("SELECT * FROM MEMBER_INFORMATION WHERE MemberId IN (SELECT DISTINCT MemberId FROM MEMBER_STATUS WHERE ApplicationId= ? AND ClusterAlias= ?) ORDER BY MemberId", applicationId, clusterId);
         }
         print(result);
     }

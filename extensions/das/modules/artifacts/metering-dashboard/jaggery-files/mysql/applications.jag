@@ -21,7 +21,7 @@
 include('metering-authentication.jag');
 
 (function () {
-    var db = new Database("WSO2_ANALYTICS_PROCESSED_DATA_STORE_DB");
+    var db = new Database("WSO2_PPAAS_ANALYTICS_DB");
 
     try {
         var result = db.query("SELECT DISTINCT ApplicationId FROM MEMBER_STATUS");

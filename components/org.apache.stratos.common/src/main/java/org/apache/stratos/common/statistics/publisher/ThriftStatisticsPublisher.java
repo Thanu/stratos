@@ -67,6 +67,9 @@ public class ThriftStatisticsPublisher implements StatisticsPublisher {
     }
 
     private boolean isPublisherEnabled() {
+        if (thriftClientInfoList == null) {
+            return false;
+        }
         for (ThriftClientInfo thriftClientInfo : thriftClientInfoList) {
             if (thriftClientInfo.isStatsPublisherEnabled()) {
                 return true;
@@ -132,8 +135,8 @@ public class ThriftStatisticsPublisher implements StatisticsPublisher {
 
         try {
             if (log.isDebugEnabled()) {
-                log.debug(String.format("Publishing thrift event: [stream] %s [version] %s", streamDefinition.getName(),
-                        streamDefinition.getVersion()));
+                log.debug(String.format("Publishing thrift event: [stream] %s [version] %s",
+                        streamDefinition.getName(), streamDefinition.getVersion()));
             }
             loadBalancingDataPublisher.publish(streamDefinition.getName(), streamDefinition.getVersion(), event);
             if (log.isDebugEnabled()) {

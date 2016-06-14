@@ -70,13 +70,4 @@
             <fileMode>644</fileMode>
         </file>
     </files>
-
-    <dependencySets>
-        <dependencySet>
-            <outputDirectory>${project.artifactId}-${project.version}/lib</outputDirectory>
-            <includes>
-                <include>org.apache.stratos:org.apache.stratos.das.extension:jar</include>
-            </includes>
-        </dependencySet>
-    </dependencySets>
 </assembly>

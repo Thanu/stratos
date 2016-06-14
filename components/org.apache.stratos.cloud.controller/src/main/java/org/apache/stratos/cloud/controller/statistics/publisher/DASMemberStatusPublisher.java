@@ -22,6 +22,7 @@ package org.apache.stratos.cloud.controller.statistics.publisher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.stratos.cloud.controller.util.CloudControllerConstants;
+import org.apache.stratos.common.statistics.publisher.ThriftStatisticsPublisher;
 import org.apache.stratos.common.threading.StratosThreadPool;
 import org.wso2.carbon.databridge.commons.Attribute;
 import org.wso2.carbon.databridge.commons.AttributeType;
@@ -35,18 +36,20 @@ import java.util.concurrent.ExecutorService;
  * Publishing member status to DAS.
  */
 public class DASMemberStatusPublisher extends MemberStatusPublisher {
-
+    public static final String STATS_PUBLISHER_THREAD_POOL_ID = "member.status.das.stats.publisher.thread.pool";
+    public static final int STATS_PUBLISHER_THREAD_POOL_SIZE = 10;
     private static final Log log = LogFactory.getLog(DASMemberStatusPublisher.class);
-    private static volatile DASMemberStatusPublisher dasMemberStatusPublisher;
     private static final String DATA_STREAM_NAME = "member_lifecycle";
     private static final String VERSION = "1.0.0";
     private static final String DAS_THRIFT_CLIENT_NAME = "das";
+    private static volatile DASMemberStatusPublisher dasMemberStatusPublisher;
+    private final ThriftStatisticsPublisher thriftStatisticsPublisher = new ThriftStatisticsPublisher
+            (createStreamDefinition(), DAS_THRIFT_CLIENT_NAME);
     private ExecutorService executorService;
 
     private DASMemberStatusPublisher() {
-        super(createStreamDefinition(), DAS_THRIFT_CLIENT_NAME);
-        executorService = StratosThreadPool.getExecutorService(CloudControllerConstants.STATS_PUBLISHER_THREAD_POOL_ID,
-                CloudControllerConstants.STATS_PUBLISHER_THREAD_POOL_SIZE);
+        executorService = StratosThreadPool.getExecutorService(STATS_PUBLISHER_THREAD_POOL_ID,
+                STATS_PUBLISHER_THREAD_POOL_SIZE);
     }
 
     public static DASMemberStatusPublisher getInstance() {
@@ -130,10 +133,20 @@ public class DASMemberStatusPublisher extends MemberStatusPublisher {
                 payload.add(partitionId);
                 payload.add(memberId);
                 payload.add(status);
-                publish(payload.toArray());
+                thriftStatisticsPublisher.publish(payload.toArray());
             }
         };
         executorService.execute(publisher);
+    }
+
+    @Override
+    public void publishActiveCountsToAnalytics() {
+        // TODO
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return thriftStatisticsPublisher.isEnabled();
     }
 
 }

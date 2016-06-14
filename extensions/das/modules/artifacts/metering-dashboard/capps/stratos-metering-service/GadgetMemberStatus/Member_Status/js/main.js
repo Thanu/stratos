@@ -20,10 +20,10 @@
  */
 var type, columns, maxUpdateValue;
 
-var REFRESH_INTERVAL = 300000;
+var REFRESH_INTERVAL = 1800000; //Gadget will be refreshed every 30 Minutes
 var dataLoaded = true;
 
-var timeInterval = '30 Min';
+var timeInterval = '30 Minutes';
 var applicationId = '';
 var clusterId = '';
 
@@ -119,9 +119,13 @@ function makeDataTable(data) {
 
 function makeRows(data) {
     var rows = [];
+    var format = d3.time.format("%Y-%m-%d %H:%M:%S");
     for (var i = 0; i < data.length; i++) {
         var record = data[i];
         var row = columns.map(function (column) {
+            if (column.COLUMN_NAME == 'Time') {
+                return format(new Date(parseInt(record[column.COLUMN_NAME])));
+            }
             return record[column.COLUMN_NAME];
         });
         rows.push(row);
@@ -152,12 +156,12 @@ function drawChart(data) {
         } else {
             chart = igviz.setUp("#placeholder", gadgetConfig.chartConfig, dataTable);
             chart.setXAxis({
-                "labelAngle": -35,
-                "labelAlign": "right",
-                "labelDy": 0,
-                "labelDx": 0,
-                "titleDy": 25
-            })
+                    "labelAngle": -35,
+                    "labelAlign": "right",
+                    "labelDy": 0,
+                    "labelDx": 0,
+                    "titleDy": 25
+                })
                 .setYAxis({
                     "titleDy": -30
                 });

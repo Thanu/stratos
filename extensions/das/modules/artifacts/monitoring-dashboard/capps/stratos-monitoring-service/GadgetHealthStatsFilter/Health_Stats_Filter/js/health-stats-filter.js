@@ -20,15 +20,18 @@
  */
 var clusterId;
 var memberId;
-var time = '30 Min';
+var time = '30 Minutes';
 $(document).ready(function () {
-    loadCluster();
+    setTimeout(function () {
+        loadCluster();
+    }, 2000);
 });
 
 
 $('body').on('change', '#cluster-filter', function () {
     var e = document.getElementById("cluster-filter");
     clusterId = e.options[e.selectedIndex].value;
+    memberId = 'All Members';
     loadMember(clusterId);
     publish(time);
 });
@@ -38,7 +41,6 @@ $('body').on('change', '#member-filter', function () {
     memberId = e.options[e.selectedIndex].value;
     publish(time);
 });
-
 
 
 function loadCluster(application) {
@@ -61,17 +63,19 @@ function loadCluster(application) {
                 elem.appendChild(option);
             }
             document.getElementById('cluster').appendChild(elem);
+
+            if (clusterIds.length > 0) {
+                elem.selectedIndex = 1;
+                loadMember(elem.options[elem.selectedIndex].value);
+                publish(time);
+            }
         }
     });
-    if (clusterId == null) {
-        var e = document.getElementById("cluster-filter");
-        clusterId = e.options[e.selectedIndex].value;
-    }
 }
 
 function loadMember(cluster) {
     $.ajax({
-        url: '/portal/apis/health-stats-members?clusterId='+cluster,
+        url: '/portal/apis/health-stats-members?clusterId=' + cluster,
         dataType: 'json',
         success: function (result) {
             var elem = document.getElementById('member-filter');
@@ -100,16 +104,15 @@ function loadMember(cluster) {
             document.getElementById('member').appendChild(memberList);
         }
     });
-    if (memberId == null) {
-        var e = document.getElementById("member-filter");
-        memberId = e.options[e.selectedIndex].value;
-    }
 }
 
 function publish(timeInterval) {
     time = timeInterval;
+    var elem = document.getElementById('cluster-filter');
+    clusterId = elem.options[elem.selectedIndex].value;
+    var elem = document.getElementById('member-filter');
+    memberId = elem.options[elem.selectedIndex].value;
     var data = {clusterId: clusterId, memberId: memberId, timeInterval: time};
     gadgets.Hub.publish("health-stats-filter", data);
     console.log("Publishing filter values: " + JSON.stringify(data));
 }
-

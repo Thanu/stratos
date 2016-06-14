@@ -45,7 +45,7 @@
             <div class="container-fluid">
                <div class="row">
                     <div class="col-xs-11" id="cluster">
-                        <label class="col-xs-1" for="cluster-filter">Cluster</label>
+                        <label class="col-xs-2" for="cluster-filter">Cluster</label>
                         <select id="cluster-filter">
                             <option value="Select Cluster" disabled>Select Cluster</option>
                         </select>
@@ -53,7 +53,7 @@
                </div>
                <div class="row">
                     <div class="col-xs-11" id="member" style="margin-top: 10px;">
-                        <label class="col-xs-1" for="member-filter">Member</label>
+                        <label class="col-xs-2" for="member-filter">Member</label>
                         <select id="member-filter">
                             <option value="All Members" disabled>All Members</option>
                         </select>
@@ -61,13 +61,14 @@
                </div>
                <div class="row">
                     <div class="col-xs-11" id="time-interval" style="margin-top: 10px;">
-                         <label class="col-xs-1" for="time-selector">Time</label>
-                         <input type="button" class="button" value="30 Min" onClick="publish(this.value)">
+                         <label class="col-xs-2" for="time-selector">Time Duration</label>
+                         <input type="button" class="button" value="30 Minutes" onClick="publish(this.value)">
                          <input type="button" class="button" value="1 Hour" onClick="publish(this.value)">
+                         <input type="button" class="button" value="6 Hours" onClick="publish(this.value)">
                          <input type="button" class="button" value="1 Day" onClick="publish(this.value)">
                          <input type="button" class="button" value="1 Week" onClick="publish(this.value)">
                          <input type="button" class="button" value="1 Month" onClick="publish(this.value)">
-                         <input type="button" class="button" value="6 Month" onClick="publish(this.value)">
+                         <input type="button" class="button" value="6 Months" onClick="publish(this.value)">
                          <input type="button" class="button" value="1 Year" onClick="publish(this.value)">
                     </div>
                 </div>

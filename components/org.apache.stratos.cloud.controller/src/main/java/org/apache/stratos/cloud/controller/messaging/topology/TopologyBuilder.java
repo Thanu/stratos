@@ -34,7 +34,6 @@ import org.apache.stratos.cloud.controller.statistics.publisher.MemberStatusPubl
 import org.apache.stratos.cloud.controller.util.CloudControllerUtil;
 import org.apache.stratos.common.Property;
 import org.apache.stratos.common.constants.StratosConstants;
-import org.apache.stratos.common.statistics.publisher.StatisticsPublisherType;
 import org.apache.stratos.kubernetes.client.KubernetesConstants;
 import org.apache.stratos.messaging.domain.application.ClusterDataHolder;
 import org.apache.stratos.messaging.domain.instance.ClusterInstance;
@@ -57,11 +56,12 @@ import java.util.*;
  */
 public class TopologyBuilder {
     private static final Log log = LogFactory.getLog(TopologyBuilder.class);
-    private static MemberInformationPublisher memInfoPublisher = CloudControllerPublisherFactory.
-            createMemberInformationPublisher(StatisticsPublisherType.WSO2DAS);
+    private static MemberInformationPublisher memInfoPublisher =
+            CloudControllerPublisherFactory.createMemberInformationPublisher();
 
-    private static MemberStatusPublisher memStatusPublisher = CloudControllerPublisherFactory.
-            createMemberStatusPublisher(StatisticsPublisherType.WSO2DAS);
+    private static MemberStatusPublisher memStatusPublisher =
+            CloudControllerPublisherFactory.createMemberStatusPublisher();
+
 
     public static void handleServiceCreated(List<Cartridge> cartridgeList) throws RegistryException {
         Service service;
@@ -358,8 +358,8 @@ public class TopologyBuilder {
             Long timestamp = System.currentTimeMillis();
             //publishing member status to DAS
             if (memStatusPublisher.isEnabled()) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Publishing Member Status to DAS");
+                if (log.isInfoEnabled()) {
+                    log.info("Publishing analytics data for MemberCreatedEvent...");
                 }
                 memStatusPublisher.publish(timestamp, applicationId, memberContext.getClusterId(), clusterAlias,
                         memberContext.getClusterInstanceId(), memberContext.getCartridgeType(),
@@ -436,7 +436,7 @@ public class TopologyBuilder {
 
                 if (memInfoPublisher.isEnabled()) {
                     if (log.isInfoEnabled()) {
-                        log.info("Publishing member information to DAS");
+                        log.info("Publishing member information analytics data...");
                     }
                     String scalingDecisionId = memberContext.getProperties()
                             .getProperty(StratosConstants.SCALING_DECISION_ID).getValue();
@@ -445,7 +445,7 @@ public class TopologyBuilder {
                 }
                 if (memStatusPublisher.isEnabled()) {
                     if (log.isInfoEnabled()) {
-                        log.info("Publishing member status to DAS");
+                        log.info("Publishing analytics data for MemberInitializedEvent...");
                     }
                     memStatusPublisher.publish(timestamp, applicationId, memberContext.getClusterId(), clusterAlias,
                             memberContext.getClusterInstanceId(), memberContext.getCartridgeType(),
@@ -508,8 +508,8 @@ public class TopologyBuilder {
                     TopologyEventPublisher.sendMemberStartedEvent(instanceStartedEvent);
                     //publishing member status to DAS
                     if (memStatusPublisher.isEnabled()) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Publishing Member Status to DAS");
+                        if (log.isInfoEnabled()) {
+                            log.info("Publishing analytics data for MemberStartedEvent...");
                         }
                         memStatusPublisher
                                 .publish(timestamp, applicationId, instanceStartedEvent.getClusterId(), clusterAlias,
@@ -616,8 +616,8 @@ public class TopologyBuilder {
 
                 //publishing member status to DAS
                 if (memStatusPublisher.isEnabled()) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Publishing Member Status to DAS");
+                    if (log.isInfoEnabled()) {
+                        log.info("Publishing analytics data for MemberActivatedEvent...");
                     }
                     memStatusPublisher
                             .publish(timestamp, applicationId, memberActivatedEvent.getClusterId(), clusterAlias,
@@ -679,8 +679,8 @@ public class TopologyBuilder {
         TopologyEventPublisher.sendMemberReadyToShutdownEvent(memberReadyToShutdownEvent);
         //publishing member status to DAS.
         if (memStatusPublisher.isEnabled()) {
-            if (log.isDebugEnabled()) {
-                log.debug("Publishing Member Status to DAS");
+            if (log.isInfoEnabled()) {
+                log.info("Publishing analytics data for MemberReadyToShutdownEvent...");
             }
             memStatusPublisher
                     .publish(timestamp, applicationId, instanceReadyToShutdownEvent.getClusterId(), clusterAlias,
@@ -789,8 +789,8 @@ public class TopologyBuilder {
 
         //publishing member status to DAS.
         if (memStatusPublisher.isEnabled()) {
-            if (log.isDebugEnabled()) {
-                log.debug("Publishing Member Status to DAS");
+            if (log.isInfoEnabled()) {
+                log.info("Publishing analytics data for MemberTerminatedEvent...");
             }
             memStatusPublisher.publish(timestamp, applicationId, member.getClusterId(), clusterAlias,
                     member.getClusterInstanceId(), member.getServiceName(), member.getNetworkPartitionId(),

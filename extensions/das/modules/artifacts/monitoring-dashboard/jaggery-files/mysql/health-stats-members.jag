@@ -22,12 +22,11 @@ include("monitoring-authentication.jag");
 
 (function () {
 
-    var db = new Database("WSO2_ANALYTICS_EVENT_STORE_DB");
+    var db = new Database("WSO2_PPAAS_ANALYTICS_DB");
 
     try {
         var clusterId = request.getParameter('clusterId');
-        var result = db.query("SELECT DISTINCT MemberId FROM MEMBER_LIST WHERE ClusterId=? AND MemberStatus='Active' " +
-                "AND MemberId NOT IN (SELECT MemberId FROM MEMBER_LIST WHERE MemberStatus='Terminated')", clusterId);
+        var result = db.query("SELECT DISTINCT MemberId FROM MEMBER_LIST WHERE ClusterId=? AND MemberStatus='ACTIVE' AND MemberId NOT IN (SELECT MemberId FROM MEMBER_LIST WHERE MemberStatus='Terminated') ORDER BY MemberId", clusterId);
         if (result != null) {
             print(result);
         }

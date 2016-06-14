@@ -27,6 +27,7 @@ import org.apache.stratos.cloud.controller.domain.IaasProvider;
 import org.apache.stratos.cloud.controller.domain.InstanceMetadata;
 import org.apache.stratos.cloud.controller.domain.MemberContext;
 import org.apache.stratos.cloud.controller.util.CloudControllerConstants;
+import org.apache.stratos.common.statistics.publisher.ThriftStatisticsPublisher;
 import org.apache.stratos.common.threading.StratosThreadPool;
 import org.wso2.carbon.databridge.commons.Attribute;
 import org.wso2.carbon.databridge.commons.AttributeType;
@@ -41,19 +42,21 @@ import java.util.concurrent.ExecutorService;
  * MemberInfoPublisher to publish member information/metadata to DAS.
  */
 public class DASMemberInformationPublisher extends MemberInformationPublisher {
-
+    public static final String STATS_PUBLISHER_THREAD_POOL_ID = "member.information.das.stats.publisher.thread.pool";
+    public static final int STATS_PUBLISHER_THREAD_POOL_SIZE = 10;
     private static final Log log = LogFactory.getLog(DASMemberInformationPublisher.class);
-    private static volatile DASMemberInformationPublisher dasMemberInformationPublisher;
     private static final String DATA_STREAM_NAME = "member_info";
     private static final String VERSION = "1.0.0";
     private static final String DAS_THRIFT_CLIENT_NAME = "das";
     private static final String VALUE_NOT_FOUND = "Value Not Found";
+    private static volatile DASMemberInformationPublisher dasMemberInformationPublisher;
     private ExecutorService executorService;
+    private ThriftStatisticsPublisher thriftStatisticsPublisher = new ThriftStatisticsPublisher
+            (createStreamDefinition(), DAS_THRIFT_CLIENT_NAME);
 
     private DASMemberInformationPublisher() {
-        super(createStreamDefinition(), DAS_THRIFT_CLIENT_NAME);
-        executorService = StratosThreadPool.getExecutorService(CloudControllerConstants.STATS_PUBLISHER_THREAD_POOL_ID,
-                CloudControllerConstants.STATS_PUBLISHER_THREAD_POOL_SIZE);
+        executorService = StratosThreadPool.getExecutorService(STATS_PUBLISHER_THREAD_POOL_ID,
+                STATS_PUBLISHER_THREAD_POOL_SIZE);
     }
 
     public static DASMemberInformationPublisher getInstance() {
@@ -100,6 +103,13 @@ public class DASMemberInformationPublisher extends MemberInformationPublisher {
         }
     }
 
+    public static String handleNull(String param) {
+        if (null != param) {
+            return param;
+        }
+        return VALUE_NOT_FOUND;
+    }
+
     /**
      * Publishing member info to DAS.
      *
@@ -118,7 +128,8 @@ public class DASMemberInformationPublisher extends MemberInformationPublisher {
                     log.warn("Couldn't publish member information as instance metadata is null");
                     return;
                 } else {
-                    MemberContext memberContext = CloudControllerContext.getInstance().getMemberContextOfMemberId(memberId);
+                    MemberContext memberContext = CloudControllerContext.getInstance().getMemberContextOfMemberId
+                            (memberId);
                     String cartridgeType = memberContext.getCartridgeType();
                     Cartridge cartridge = CloudControllerContext.getInstance().getCartridge(cartridgeType);
                     IaasProvider iaasProvider = CloudControllerContext.getInstance().getIaasProviderOfPartition(
@@ -157,17 +168,15 @@ public class DASMemberInformationPublisher extends MemberInformationPublisher {
                                 metadata.getOperatingSystemName(), metadata.getOperatingSystemVersion(),
                                 metadata.getOperatingSystemArchitecture(), metadata.isOperatingSystem64bit()));
                     }
-                    publish(payload.toArray());
+                    thriftStatisticsPublisher.publish(payload.toArray());
                 }
             }
         };
         executorService.execute(publisher);
     }
 
-    public static String handleNull(String param) {
-        if (null != param) {
-            return param;
-        }
-        return VALUE_NOT_FOUND;
+    @Override
+    public boolean isEnabled() {
+        return thriftStatisticsPublisher.isEnabled();
     }
 }

@@ -20,7 +20,7 @@
  */
 var gadgetConfig = {
     "id": "Scaling_Details",
-    "title": "Cluster Instances",
+    "title": "Scaling Decisions",
     "type": "batch",
     "columns": [
         {
@@ -89,13 +89,18 @@ var gadgetConfig = {
             "DATA_TYPE": "int"
         },
         {
+            "COLUMN_NAME": "RequiredInstanceCount",
+            "LABEL_NAME": "Required Instance Count",
+            "DATA_TYPE": "int"
+        },
+        {
             "COLUMN_NAME": "ActiveInstanceCount",
             "LABEL_NAME": "Active Instance Count",
             "DATA_TYPE": "int"
         },
         {
-            "COLUMN_NAME": "AdditionalInstanceCount",
-            "LABEL_NAME": "Additional Instance Count",
+            "COLUMN_NAME": "CreatedInstances",
+            "LABEL_NAME": "Created Instances",
             "DATA_TYPE": "int"
         },
         {

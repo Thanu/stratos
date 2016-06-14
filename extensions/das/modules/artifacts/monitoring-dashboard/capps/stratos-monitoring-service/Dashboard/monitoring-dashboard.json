@@ -229,7 +229,7 @@
               "id": "7xb1k0zbnjena6bzpd190be29",
               "content": {
                 "id": "Scaling_Details",
-                "title": "Cluster Instances",
+                "title": "Scaling Decisions",
                 "type": "gadget",
                 "thumbnail": "local://images/gadgetIcon.png",
                 "data": {
@@ -256,10 +256,10 @@
                   "height": "600",
                   "borders": true,
                   "titlePosition": "left",
-                  "title": "Cluster Instances"
+                  "title": "Scaling Decisions"
                 },
                 "locale_titles": {
-                  "en-US": "Cluster Instances"
+                  "en-US": "Scaling Decisions"
                 },
                 "settings": {}
               }

@@ -22,6 +22,7 @@ package org.apache.stratos.autoscaler.statistics.publisher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.stratos.autoscaler.util.AutoscalerConstants;
+import org.apache.stratos.common.statistics.publisher.ThriftStatisticsPublisher;
 import org.apache.stratos.common.threading.StratosThreadPool;
 import org.wso2.carbon.databridge.commons.Attribute;
 import org.wso2.carbon.databridge.commons.AttributeType;
@@ -35,18 +36,19 @@ import java.util.concurrent.ExecutorService;
  * MemberInfoPublisher to publish member information/metadata to DAS.
  */
 public class DASScalingDecisionPublisher extends ScalingDecisionPublisher {
-
+    public static final String STATS_PUBLISHER_THREAD_POOL_ID = "scaling.decision.das.stats.publisher.thread.pool";
     private static final Log log = LogFactory.getLog(DASScalingDecisionPublisher.class);
-    private static volatile DASScalingDecisionPublisher dasScalingDecisionPublisher;
     private static final String DATA_STREAM_NAME = "scaling_decision";
     private static final String VERSION = "1.0.0";
     private static final String DAS_THRIFT_CLIENT_NAME = "das";
     private static final int STATS_PUBLISHER_THREAD_POOL_SIZE = 10;
+    private static volatile DASScalingDecisionPublisher dasScalingDecisionPublisher;
     private ExecutorService executorService;
+    private ThriftStatisticsPublisher thriftStatisticsPublisher = new ThriftStatisticsPublisher
+            (createStreamDefinition(), DAS_THRIFT_CLIENT_NAME);
 
     public DASScalingDecisionPublisher() {
-        super(createStreamDefinition(), DAS_THRIFT_CLIENT_NAME);
-        executorService = StratosThreadPool.getExecutorService(AutoscalerConstants.STATS_PUBLISHER_THREAD_POOL_ID,
+        executorService = StratosThreadPool.getExecutorService(STATS_PUBLISHER_THREAD_POOL_ID,
                 STATS_PUBLISHER_THREAD_POOL_SIZE);
     }
 
@@ -164,11 +166,16 @@ public class DASScalingDecisionPublisher extends ScalingDecisionPublisher {
                 payload.add(activeInstanceCount);
                 payload.add(additionalInstanceCount);
                 payload.add(scalingReason);
-                publish(payload.toArray());
+                thriftStatisticsPublisher.publish(payload.toArray());
             }
 
         };
         executorService.execute(publisher);
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return thriftStatisticsPublisher.isEnabled();
     }
 }
 

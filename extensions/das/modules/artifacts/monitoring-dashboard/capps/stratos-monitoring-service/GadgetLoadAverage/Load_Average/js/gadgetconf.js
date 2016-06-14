@@ -25,7 +25,7 @@ var gadgetConfig = {
     "columns": [
         {
             "COLUMN_NAME": "Time",
-            "DATA_TYPE": "varchar"
+            "DATA_TYPE": "time"
         },
         {
             "COLUMN_NAME": "PartitionId",

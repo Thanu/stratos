@@ -21,7 +21,6 @@ package org.apache.stratos.manager.statistics.publisher;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.stratos.common.statistics.publisher.ThriftClientConfig;
 import org.apache.stratos.common.statistics.publisher.ThriftStatisticsPublisher;
 import org.apache.stratos.common.threading.StratosThreadPool;
 import org.apache.stratos.manager.utils.StratosManagerConstants;
@@ -36,7 +35,7 @@ import java.util.concurrent.ExecutorService;
 /**
  * Application signup data publisher.
  */
-public class DASApplicationSignUpDataPublisher extends ThriftStatisticsPublisher {
+public class DASApplicationSignUpDataPublisher extends ApplicationSignUpDataPublisher {
 
     private static final Log log = LogFactory.getLog(DASApplicationSignUpDataPublisher.class);
 
@@ -51,9 +50,11 @@ public class DASApplicationSignUpDataPublisher extends ThriftStatisticsPublisher
     private static final String END_TIME = "end_time";
     private static final String DURATION = "duration";
 
+    private static final String DAS_THRIFT_CLIENT_NAME = "das";
+    private static volatile DASApplicationSignUpDataPublisher dasApplicationSignUpDataPublisher;
     private ExecutorService executorService;
-
-    private static DASApplicationSignUpDataPublisher instance;
+    private ThriftStatisticsPublisher thriftStatisticsPublisher = new ThriftStatisticsPublisher(
+            createStreamDefinition(), DAS_THRIFT_CLIENT_NAME);
 
     public enum SignUpAction {Added, Removed}
 
@@ -61,7 +62,6 @@ public class DASApplicationSignUpDataPublisher extends ThriftStatisticsPublisher
      * Constructor for initializing the data publisher.
      */
     private DASApplicationSignUpDataPublisher() {
-        super(getStreamDefinition(), ThriftClientConfig.DAS_THRIFT_CLIENT_NAME);
         int threadPoolSize = Integer.getInteger(StratosManagerConstants.STATS_PUBLISHER_THREAD_POOL_ID,
                 StratosManagerConstants.STATS_PUBLISHER_THREAD_POOL_SIZE);
         executorService = StratosThreadPool
@@ -69,17 +69,17 @@ public class DASApplicationSignUpDataPublisher extends ThriftStatisticsPublisher
     }
 
     public static DASApplicationSignUpDataPublisher getInstance() {
-        if (instance == null) {
+        if (dasApplicationSignUpDataPublisher == null) {
             synchronized (DASApplicationSignUpDataPublisher.class) {
-                if (instance == null) {
-                    instance = new DASApplicationSignUpDataPublisher();
+                if (dasApplicationSignUpDataPublisher == null) {
+                    dasApplicationSignUpDataPublisher = new DASApplicationSignUpDataPublisher();
                 }
             }
         }
-        return instance;
+        return dasApplicationSignUpDataPublisher;
     }
 
-    private static StreamDefinition getStreamDefinition() {
+    private static StreamDefinition createStreamDefinition() {
         try {
             // Create stream definition
             StreamDefinition streamDefinition = new StreamDefinition(DATASTREAM_NAME, VERSION);
@@ -112,15 +112,15 @@ public class DASApplicationSignUpDataPublisher extends ThriftStatisticsPublisher
      * @param endTime
      * @param duration
      */
-    public void publish(final String applicationId, final int tenantId, final String tenantDomain,
-            final long startTime, final long endTime, final long duration) {
+    public void publish(final String applicationId, final int tenantId, final String tenantDomain, final long startTime,
+            final long endTime, final long duration) {
         Runnable publisher = new Runnable() {
             @Override public void run() {
                 if (log.isDebugEnabled()) {
                     log.debug(String.format("Publishing application signup statistics: [application_id] %s "
-                                    + "[tenant_id] %d [tenant_domain] %s [start_time] %d [end_time] %d "
-                                    + "[duration] %d ", applicationId, tenantId, tenantDomain, startTime, endTime,
-                            duration));
+                                    + "[tenant_id] %d [tenant_domain] %s [start_time] %d [end_time] %d " +
+                            "[duration] %d ",
+                            applicationId, tenantId, tenantDomain, startTime, endTime, duration));
                 }
                 //adding payload data
                 List<Object> payload = new ArrayList<Object>();
@@ -130,9 +130,13 @@ public class DASApplicationSignUpDataPublisher extends ThriftStatisticsPublisher
                 payload.add(startTime);
                 payload.add(endTime);
                 payload.add(duration);
-                publish(payload.toArray());
+                thriftStatisticsPublisher.publish(payload.toArray());
             }
         };
         executorService.execute(publisher);
+    }
+
+    @Override public boolean isEnabled() {
+        return thriftStatisticsPublisher.isEnabled();
     }
 }

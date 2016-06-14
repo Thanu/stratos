@@ -19,9 +19,33 @@
 
 package org.apache.stratos.common.statistics.publisher;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Statistics publisher type enumneration.
+ * Statistics publisher type enumeration.
  */
 public enum StatisticsPublisherType {
-    WSO2CEP, WSO2DAS
+    WSO2CEP("WSO2CEP"), WSO2DAS("WSO2DAS"), JDBC("JDBC");
+
+    private String value;
+    private static Map<String, StatisticsPublisherType> map = new HashMap<>();
+
+    static {
+        for (StatisticsPublisherType pageType : StatisticsPublisherType.values()) {
+            map.put(pageType.value, pageType);
+        }
+    }
+
+    private StatisticsPublisherType(String value) {
+        this.value = value;
+    }
+
+    public String toString() {
+        return this.value;
+    }
+
+    public static StatisticsPublisherType getType(String value){
+        return map.get(value);
+    }
 }

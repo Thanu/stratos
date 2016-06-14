@@ -20,9 +20,9 @@
  */
 var type, columns, maxUpdateValue;
 
-var REFRESH_INTERVAL = 300000;
+var REFRESH_INTERVAL = 1800000; //Gadget will be refreshed every 30 Minutes
 var dataLoaded = true;
-var timeInterval = '30 Min';
+var timeInterval = '30 Minutes';
 var clusterId = '';
 var memberId = '';
 
@@ -136,6 +136,7 @@ function drawChart(data) {
     if (dataTable.data.length != 0) {
         gadgetConfig.chartConfig.width = $("#placeholder").width();
         gadgetConfig.chartConfig.height = $("#placeholder").height() - 65;
+        gadgetConfig.chartConfig.timeInterval = timeInterval;
         var chartType = gadgetConfig.chartConfig.chartType;
         var xAxis = gadgetConfig.chartConfig.xAxis;
         var chart;

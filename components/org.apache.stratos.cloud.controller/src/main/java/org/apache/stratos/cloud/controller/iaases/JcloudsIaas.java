@@ -19,6 +19,7 @@
 
 package org.apache.stratos.cloud.controller.iaases;
 
+import org.apache.axis2.databinding.types.soapencoding.Array;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,11 +34,13 @@ import org.apache.stratos.cloud.controller.util.CloudControllerConstants;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.NodeMetadataBuilder;
+import org.jclouds.compute.domain.Processor;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.rest.ResourceNotFoundException;
 import org.wso2.carbon.registry.core.exceptions.RegistryException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -246,9 +249,8 @@ public abstract class JcloudsIaas extends Iaas {
 
                 memberContext.setAllocatedIPs(associatedIPs.toArray(new String[associatedIPs.size()]));
                 log.info(String.format("IP addresses allocated to member: [cartridge-type] %s [member-id] %s "
-                                + "[allocated-ip-addresses] %s ", memberContext.getCartridgeType(), memberContext
-                        .getMemberId(),
-                        memberContext.getAllocatedIPs()));
+                                + "[allocated-ip-addresses] %s ", memberContext.getCartridgeType(),
+                        memberContext.getMemberId(), memberContext.getAllocatedIPs()));
 
                 // build the node with the new ip
                 nodeMetadata = NodeMetadataBuilder.fromNodeMetadata(nodeMetadata).publicAddresses(associatedIPs)
@@ -303,7 +305,7 @@ public abstract class JcloudsIaas extends Iaas {
 
         if (cartridge == null) {
             String msg = String.format("Member termination failed, could not find cartridge in cloud controller "
-                    + "context: [cartridge-type] %s [member-id] %s", cartridgeType, memberId);
+                            + "context: [cartridge-type] %s [member-id] %s", cartridgeType, memberId);
             log.error(msg);
             throw new InvalidCartridgeTypeException(msg);
         }
@@ -311,12 +313,13 @@ public abstract class JcloudsIaas extends Iaas {
         // if no matching node id can be found.
         if (nodeId == null) {
             String msg = String.format("Member termination failed, could not find node id in member context: "
-                    + "[cartridge-type] %s [member-id] %s", cartridgeType, memberId);
+                            + "[cartridge-type] %s [member-id] %s", cartridgeType, memberId);
+            log.error(msg);
             // Execute member termination post process
             try {
                 CloudControllerServiceUtil.executeMemberTerminationPostProcess(memberContext);
             } catch (RegistryException e) {
-                log.error("Instance member termination post process failed! " + memberContext.toString(), e);
+                log.error("Could not persist data in registry data store", e);
             }
             throw new InvalidMemberException(msg);
         }

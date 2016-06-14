@@ -35,7 +35,6 @@
     <modules>
         <module>modules/artifacts/metering-dashboard/capps</module>
         <module>modules/artifacts/monitoring-dashboard/capps</module>
-        <module>modules/stratos-das-extension</module>
         <module>modules/distribution</module>
     </modules>
 </project>

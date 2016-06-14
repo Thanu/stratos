@@ -20,49 +20,7 @@
 
 -->
 <artifacts>
-    <artifact name="stratos-monitoring-service" version="1.0.0" type="carbon/application">
-        <dependency artifact="EventstreamAverageInFlightRequest" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventstreamAverageLoadAvergaeStats" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventstreamAverageMemoryConsumptionStats" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventstreamMemberAverageLoadAverageStats" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventstreamMemberAverageMemoryConsumptionStats" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventstreamScalingDecision" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventstoreAverageInFlightRequest" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventstoreAverageLoadAverageStats" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventstoreAverageMemoryConsumptionStats" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventstoreMemberAverageLoadAvaerageStats" version="1.0.0"
-                    include="true" serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventstoreMemberAverageMemoryConsumptionStats" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventstoreScalingDecision" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventreceiverAverageInFlightRequest" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventreceiverAverageLoadAverageStats" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventreceiverAverageMemoryConsumptionStats" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventreceiverMemberAverageLoadAverageStats" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventreceiverMemberAverageMemoryConsumptionStats" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="EventreceiverScalingDecision" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="SparkscriptsInFlightRequest" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
-        <dependency artifact="SparkscriptsLoadAverage" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
-        <dependency artifact="SparkscriptsMemoryUsage" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
-        <dependency artifact="SparkscriptsScalingDecision" version="1.0.0" include="true"
-                    serverRole="DataAnalyticsServer"/>
+    <artifact name="ppaas-monitoring-service" version="1.0.0" type="carbon/application">
         <dependency artifact="GadgetHealthStatsFilter" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
         <dependency artifact="GadgetInFlightRequest" version="1.0.0" include="true"  serverRole="DataAnalyticsServer"/>
         <dependency artifact="GadgetLoadAverage" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>

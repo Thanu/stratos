@@ -25,7 +25,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.stratos.manager.exception.ApplicationSignUpException;
 import org.apache.stratos.manager.messaging.publisher.ApplicationSignUpEventPublisher;
 import org.apache.stratos.manager.registry.RegistryManager;
+import org.apache.stratos.manager.statistics.publisher.ApplicationSignUpDataPublisher;
 import org.apache.stratos.manager.statistics.publisher.DASApplicationSignUpDataPublisher;
+import org.apache.stratos.manager.statistics.publisher.StratosManagerPublisherFactory;
 import org.apache.stratos.manager.user.management.StratosUserManagerUtils;
 import org.apache.stratos.messaging.domain.application.signup.ApplicationSignUp;
 import org.apache.stratos.messaging.domain.application.signup.ArtifactRepository;
@@ -42,8 +44,8 @@ public class ApplicationSignUpHandler {
     private static final String APPLICATION_SIGNUP_RESOURCE_PATH = "/stratos.manager/application.signups/";
     private static final long DEFAULT_APPLICATION_SIGNUP_REMOVED_TIMESTAMP = -1;
     private static final long DEFAULT_APPLICATION_SIGNUP_DURATION = 0;
-    private static DASApplicationSignUpDataPublisher applicationSignUpDataPublisher = DASApplicationSignUpDataPublisher
-            .getInstance();
+    private static ApplicationSignUpDataPublisher applicationSignUpDataPublisher = StratosManagerPublisherFactory
+            .createApplicationSignUpDataPublisher();
 
     private String prepareApplicationSignupResourcePath(String applicationId, int tenantId) {
         return APPLICATION_SIGNUP_RESOURCE_PATH + applicationId + "-tenant-" + tenantId;
@@ -93,7 +95,7 @@ public class ApplicationSignUpHandler {
 
             if (applicationSignUpDataPublisher.isEnabled()) {
                 if (log.isInfoEnabled()) {
-                    log.info("Publishing application signup added data to DAS");
+                    log.info("Publishing application signup added analytics data...");
                 }
                 String tenantDomain = StratosUserManagerUtils.getTenantDomain(tenantId);
                 applicationSignUpDataPublisher.publish(applicationId, tenantId, tenantDomain, signUpAddedTimestamp,
@@ -189,7 +191,7 @@ public class ApplicationSignUpHandler {
 
             if (applicationSignUpDataPublisher.isEnabled()) {
                 if (log.isInfoEnabled()) {
-                    log.info("Publishing application signup removed data to DAS");
+                    log.info("Publishing application signup removed analytics data...");
                 }
                 long signUpRemovedTimestamp = System.currentTimeMillis();
                 String tenantDomain = StratosUserManagerUtils.getTenantDomain(tenantId);

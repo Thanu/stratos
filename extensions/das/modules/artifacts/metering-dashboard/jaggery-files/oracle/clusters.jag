@@ -21,11 +21,11 @@
 include('metering-authentication.jag');
 
 (function () {
-    var db = new Database("WSO2_ANALYTICS_PROCESSED_DATA_STORE_DB");
+    var db = new Database("WSO2_PPAAS_ANALYTICS_DB");
 
     try {
         var applicationId = request.getParameter('applicationId');
-        var result = db.query("SELECT DISTINCT ClusterAlias \"ClusterAlias\" FROM MEMBER_STATUS WHERE ApplicationId=?",applicationId);
+        var result = db.query("SELECT DISTINCT ClusterAlias \"ClusterAlias\" FROM MEMBER_STATUS WHERE ApplicationId=? ORDER BY ClusterAlias",applicationId);
 
         if (result != null) {
             print(result);

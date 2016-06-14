@@ -24,14 +24,14 @@ include('metering-authentication.jag');
 
     var ALL_CLUSTERS = 'Select Application';
 
-    var db = new Database("WSO2_ANALYTICS_PROCESSED_DATA_STORE_DB");
+    var db = new Database("WSO2_PPAAS_ANALYTICS_DB");
 
     try {
         var result;
         var applicationId = request.getParameter("applicationId");
         var ms_per_hour = 60 * 60 * 1000;
         var time_hr_decimal = 2;
-        result = db.query("SELECT ApplicationID \"ApplicationId\", TenantId \"TenantId\", TenantDomain " +
+        result = db.query("SELECT ApplicationId \"ApplicationId\", TenantId \"TenantId\", TenantDomain " +
                 "\"TenantDomain\", ROUND(SUM(Duration)/" + ms_per_hour + ",'" + time_hr_decimal + "') \"Duration\" " +
                 "FROM APPLICATION_USAGE WHERE ApplicationId= ? GROUP BY ApplicationId, TenantId, TenantDomain ORDER " +
                 "BY TenantId", applicationId);
